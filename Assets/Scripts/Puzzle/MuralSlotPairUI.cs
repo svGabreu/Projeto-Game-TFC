@@ -62,6 +62,7 @@ public class MuralSlotPairUI : MonoBehaviour
     private void OnSilhouetteClicked()
     {
         if (isCompleted || isLocked) return;
+        if (!string.IsNullOrEmpty(filledItemID)) return; // slot já ocupado
 
         if (muralUI != null)
             muralUI.TryPlaceItemInSlot(this);
@@ -85,10 +86,17 @@ public class MuralSlotPairUI : MonoBehaviour
     {
         if (item.itemType != GlyphItemType.GlyphObject) return;
 
-        filledItemID = item.itemID;
-        filledItem   = item;   // guarda referência para devolver se errado
+        // Verifica silhueta antes de remover do inventário
+        if (item.itemID != expectedItemID)
+        {
+            SetBackground(incorrectColor);
+            StartCoroutine(ResetBackgroundAfterDelay());
+            return;
+        }
 
-        // Exibe o sprite do item no slot
+        filledItemID = item.itemID;
+        filledItem   = item;
+
         if (filledItemImage != null)
         {
             filledItemImage.sprite = item.itemSprite;
@@ -96,9 +104,7 @@ public class MuralSlotPairUI : MonoBehaviour
             filledItemImage.gameObject.SetActive(true);
         }
 
-        // Remove do inventário
         InventoryManager.Instance.RemoveItem(item.itemID);
-
         TryValidate();
     }
 
@@ -117,16 +123,16 @@ public class MuralSlotPairUI : MonoBehaviour
 
     // --------------------------------------------------------
     // Valida se os dois slots estão corretos
+    // (silhueta já garantida correta ao chegar aqui)
     // --------------------------------------------------------
     private void TryValidate()
     {
         if (string.IsNullOrEmpty(filledItemID) ||
             string.IsNullOrEmpty(chosenLetter)) return;
 
-        bool silhuetaCorreta = filledItemID == expectedItemID;
-        bool letraCorreta    = chosenLetter  == expectedLetter;
+        bool letraCorreta = chosenLetter == expectedLetter;
 
-        if (silhuetaCorreta && letraCorreta)
+        if (letraCorreta)
         {
             isCompleted = true;
             SetBackground(correctColor);
@@ -136,24 +142,14 @@ public class MuralSlotPairUI : MonoBehaviour
         else
         {
             SetBackground(incorrectColor);
-
-            // Devolve item se silhueta errada
-            if (!silhuetaCorreta && !string.IsNullOrEmpty(filledItemID))
-            {
-                // ✅ usa referência direta — não depende de Resources.Load
-                if (filledItem != null)
-                    InventoryManager.Instance.AddItem(filledItem);
-
-                filledItemID = "";
-                filledItem   = null;
-                if (filledItemImage != null)
-                    filledItemImage.gameObject.SetActive(false);
-            }
-
-            // Penalidade na letra se estava errada
-            if (!letraCorreta && !string.IsNullOrEmpty(chosenLetter))
-                StartCoroutine(LockLetter());
+            StartCoroutine(LockLetter());
         }
+    }
+
+    private IEnumerator ResetBackgroundAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(1f);
+        SetBackground(defaultColor);
     }
 
     private IEnumerator LockLetter()

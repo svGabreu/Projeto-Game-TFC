@@ -37,6 +37,7 @@ public class NotebookManager : MonoBehaviour
             return;
         }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     // --------------------------------------------------------
