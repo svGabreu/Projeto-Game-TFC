@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__unity-mcp__Unity_GetProjectData",
+      "PowerShell(Get-WmiObject Win32_Process | Where-Object { $_.Name -eq \"relay_win.exe\" } | Select-Object ProcessId, ParentProcessId, CommandLine)",
+      "PowerShell(wmic process where \"name='relay_win.exe'\" get ProcessId,ParentProcessId,CommandLine /format:list)",
+      "Bash(python -c ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(where pdftotext *)",
+      "Bash(where pdftoppm *)",
+      "Bash(where mutool *)",
+      "Bash(python3 -m pip list)",
+      "Bash(pdftotext \"C:/Users/gabri/OneDrive/Desktop/resumo.pdf\" -)",
+      "Bash(python3 -c \"import pypdf; print\\('ok'\\)\")",
+      "Bash(python3 -c \"import PyPDF2; print\\('ok'\\)\")",
+      "Bash(python3 -c \"import reportlab; print\\('ok'\\)\")",
+      "mcp__unity-mcp__Unity_ManageGameObject"
+    ]
+  }
+}

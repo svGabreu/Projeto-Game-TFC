@@ -1,0 +1,11 @@
+Model Information:
+* title:	Low Poly Pencils
+* source:	https://sketchfab.com/3d-models/low-poly-pencils-8905e50d59b949d68b3bd831c01bc5e5
+* author:	BlackCube (https://sketchfab.com/blackcube4)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Low Poly Pencils" (https://sketchfab.com/3d-models/low-poly-pencils-8905e50d59b949d68b3bd831c01bc5e5) by BlackCube (https://sketchfab.com/blackcube4) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,47 @@
+{
+  "title": "History Texture Pack (Free)",
+  "version": "1.0",
+  "author": "SM ART'S",
+  "description": "A free collection of 25 stylized History-based tileable textures.",
+  "resolution": "all resolutions are 2048x2048",
+  "format": "all textures are in PNG format",
+
+  "textures": {
+    "1": "Viking_Shield_Design",
+  "2": "Ancient_Egypt_Wall",
+  "3": "Greek_Temple_Ornaments",
+  "4": "Egyptian_Hieroglyphs_Mural",
+  "5": "Medieval_Castle_Wall",
+  "6": "Roman_Mosaic_Tiles",
+  "7": "Viking_Wooden_Door",
+  "8": "Mayan_Temple_Ruins",
+  "9": "Roman_Soldier_Armor",
+  "10": "Ancient_Tribal_Patterns",
+  "11": "Native_Totem_Art",
+  "12": "Medieval_Wooden_Door",
+  "13": "Nordic_Wood_Design",
+  "14": "Roman_Soldier_Armor",
+  "15": "Greek_Classic_Wall",
+  "16": "Mythological_Wall_Art",
+  "17": "Stone_Age_Cave_Art",
+  "18": "Prehistoric_Wall_Painting",
+  "19": "Pirate_Treasure_Wall",
+  "20": "Futuristic_Panel_Wall",
+  "21": "Spaceship_Hull_Design",
+  "22": "Military_Sandbags",
+  "23": "Prison_Stone_Wall",
+  "24": "Barbed_Brick_Wall",
+  "25": "Pirate_Flag"
+  },
+
+  "tags": [
+    "stylized",
+    "History",
+    "tileable",
+    "2048x2048",
+    "game textures",
+    "free pack"
+  ],
+
+  "license": "Royalty-Free"
+}
