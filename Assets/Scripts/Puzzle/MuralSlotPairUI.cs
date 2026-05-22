@@ -62,6 +62,14 @@ public class MuralSlotPairUI : MonoBehaviour
     private void OnSilhouetteClicked()
     {
         if (isCompleted || isLocked) return;
+
+        // Se o seletor de letras está aberto, fecha e mostra o mini-inventário
+        if (muralUI != null && muralUI.IsLetterSelectorOpen())
+        {
+            muralUI.ShowMiniInventory();
+            return;
+        }
+
         if (!string.IsNullOrEmpty(filledItemID)) return; // slot já ocupado
 
         if (muralUI != null)

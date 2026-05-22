@@ -26,7 +26,14 @@ public class InventoryUI : MonoBehaviour
 
     private void Awake()
     {
+        // Singleton persistente entre cenas
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
+        DontDestroyOnLoad(transform.root.gameObject); // persiste o UIGlobal raiz
         ClosePanel();
     }
 
@@ -39,15 +46,27 @@ public class InventoryUI : MonoBehaviour
 
     private void Update()
     {
-        // Só abre/fecha se o mural estiver fechado
-        MuralUI mural = FindObjectOfType<MuralUI>();
-        if (mural != null && mural.IsOpen()) return;
+        // Não abre se qualquer outro painel estiver ativo
+        if (IsAnyOtherPanelOpen()) return;
 
         if (Keyboard.current.iKey.wasPressedThisFrame)
         {
             if (isOpen) ClosePanel();
             else OpenPanel();
         }
+
+        if (isOpen && Keyboard.current.escapeKey.wasPressedThisFrame)
+            ClosePanel();
+    }
+
+    private bool IsAnyOtherPanelOpen()
+    {
+        MuralUI mural = FindObjectOfType<MuralUI>();
+        if (mural != null && mural.IsOpen()) return true;
+        if (RioDaVidaUI.Instance   != null && RioDaVidaUI.Instance.IsOpen())   return true;
+        if (SocialUI.Instance      != null && SocialUI.Instance.IsOpen())      return true;
+        if (ItemExamineUI.Instance != null && ItemExamineUI.Instance.IsOpen()) return true;
+        return false;
     }
 
     // --------------------------------------------------------
@@ -127,4 +146,22 @@ public class InventoryUI : MonoBehaviour
     }
 
     public bool IsOpen() => isOpen;
+
+    // --------------------------------------------------------
+    // Usados pelo MuralUI / LetterSelectorUI
+    // Mostram/ocultam o painel SEM alterar o cursor
+    // (o MuralUI gerencia o cursor enquanto o mural está aberto)
+    // --------------------------------------------------------
+    public void ShowForMural()
+    {
+        isOpen = true;
+        if (inventoryPanel != null) inventoryPanel.SetActive(true);
+        RefreshUI();
+    }
+
+    public void HideForMural()
+    {
+        isOpen = false;
+        if (inventoryPanel != null) inventoryPanel.SetActive(false);
+    }
 }

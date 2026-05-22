@@ -23,9 +23,8 @@ public class MuralUI : MonoBehaviour
     public Transform miniInventoryContainer;
     public GameObject miniSlotPrefab;
 
-    // ✅ NOVO — referência ao painel de inventário para esconder/mostrar
-    [Header("Painel Inventário (para trocar com seletor)")]
-    public GameObject painelInventario;
+    [Header("Mini-inventário dentro do mural")]
+    public GameObject painelMiniInventario;   // PainelInventario_A ou _B
 
     [Header("Seletor de letras")]
     public LetterSelectorUI letterSelector;
@@ -51,10 +50,8 @@ public class MuralUI : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // Garante que o inventário aparece e o seletor está fechado ao abrir
-        if (painelInventario != null) painelInventario.SetActive(true);
-        if (letterSelector != null) letterSelector.ForceClose();
-
+        // Garante que começa mostrando o mini-inventário, seletor fechado
+        ShowMiniInventory();
         RefreshMiniInventory();
     }
 
@@ -65,14 +62,24 @@ public class MuralUI : MonoBehaviour
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Garante que seletor fecha junto
+        if (letterSelector != null) letterSelector.ForceClose();
+    }
+
+    // Mostra o mini-inventário e esconde o seletor de letras
+    public void ShowMiniInventory()
+    {
+        if (letterSelector != null) letterSelector.ForceClose();
+        if (painelMiniInventario != null) painelMiniInventario.SetActive(true);
+    }
+
+    public bool IsLetterSelectorOpen()
+    {
+        return letterSelector != null && letterSelector.IsOpen();
     }
 
     public bool IsOpen() => isOpen;
-
-    // --------------------------------------------------------
-    // Expõe o PainelInventario para o LetterSelectorUI
-    // --------------------------------------------------------
-    public GameObject GetPainelInventario() => painelInventario;
 
     private void RefreshMiniInventory()
     {
@@ -136,7 +143,10 @@ public class MuralUI : MonoBehaviour
 
     public void OpenLetterSelectorFor(MuralSlotPairUI pairUI)
     {
-        if (letterSelector != null)
-            letterSelector.OpenForMuralPair(pairUI);
+        if (letterSelector == null) return;
+
+        // Esconde o mini-inventário — o seletor ocupa o mesmo espaço no VLG
+        if (painelMiniInventario != null) painelMiniInventario.SetActive(false);
+        letterSelector.OpenForMuralPair(pairUI, this);
     }
 }

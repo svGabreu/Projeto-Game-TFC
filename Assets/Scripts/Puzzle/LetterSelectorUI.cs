@@ -13,6 +13,7 @@ public class LetterSelectorUI : MonoBehaviour
     public GameObject letterButtonPrefab;
 
     private MuralSlotPairUI currentPair;
+    private MuralUI callerMuralUI;
     private readonly string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private bool buttonsGenerated = false;
 
@@ -49,47 +50,39 @@ public class LetterSelectorUI : MonoBehaviour
     }
 
     // --------------------------------------------------------
-    // Abre o seletor e esconde o inventário
+    // Abre o seletor — MuralUI já escondeu o painelMiniInventario
     // --------------------------------------------------------
-    public void OpenForMuralPair(MuralSlotPairUI pair)
+    public void OpenForMuralPair(MuralSlotPairUI pair, MuralUI caller)
     {
         GenerateLetterButtons();
 
-        currentPair = pair;
+        currentPair   = pair;
+        callerMuralUI = caller;
         if (panelRoot != null) panelRoot.SetActive(true);
-
-        // Esconde o PainelInventario para o seletor ocupar o espaço
-        MuralUI muralUI = FindObjectOfType<MuralUI>();
-        if (muralUI != null)
-        {
-            GameObject inv = muralUI.GetPainelInventario();
-            if (inv != null) inv.SetActive(false);
-        }
     }
 
     // --------------------------------------------------------
-    // Fecha o seletor e mostra o inventário de volta
+    // Fecha o seletor e pede ao MuralUI para restaurar o mini-inventário
     // --------------------------------------------------------
     public void Close()
     {
-        currentPair = null;
         if (panelRoot != null) panelRoot.SetActive(false);
 
-        // Mostra o PainelInventario de volta
-        MuralUI muralUI = FindObjectOfType<MuralUI>();
-        if (muralUI != null)
-        {
-            GameObject inv = muralUI.GetPainelInventario();
-            if (inv != null) inv.SetActive(true);
-        }
+        if (callerMuralUI != null) callerMuralUI.ShowMiniInventory();
+
+        currentPair   = null;
+        callerMuralUI = null;
     }
 
-    // Fecha sem reativar o inventário — usado ao abrir o mural
+    // Fecha sem notificar o MuralUI — usado internamente
     public void ForceClose()
     {
-        currentPair = null;
+        currentPair   = null;
+        callerMuralUI = null;
         if (panelRoot != null) panelRoot.SetActive(false);
     }
+
+    public bool IsOpen() => panelRoot != null && panelRoot.activeSelf;
 
     private void OnLetterSelected(string letter)
     {

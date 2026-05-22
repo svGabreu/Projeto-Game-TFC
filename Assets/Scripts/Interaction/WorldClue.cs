@@ -21,17 +21,46 @@ public class WorldClue : MonoBehaviour, IInteractable
 
     private bool collected = false;
 
+    // --------------------------------------------------------
+    // E pressionado pelo jogador
+    // --------------------------------------------------------
     public void Interact()
+    {
+        if (collected) return;
+
+        // Se o painel de exame existir, abre preview antes de coletar
+        if (ItemExamineUI.Instance != null)
+        {
+            ItemExamineUI.Instance.OpenExamine(itemToGive, hintText, this);
+            return;
+        }
+
+        // Fallback: coleta imediata (sem painel de exame na cena)
+        ConfirmCollect();
+    }
+
+    // --------------------------------------------------------
+    // Chamado pelo ItemExamineUI ao clicar em "Coletar"
+    // --------------------------------------------------------
+    public void ConfirmCollect()
     {
         if (collected) return;
 
         if (itemToGive != null)
         {
             bool added = InventoryManager.Instance.AddItem(itemToGive);
-            if (!added) return;
+
+            // Se não foi adicionado, verifica o motivo:
+            // • Item já está no inventário → prossegue (scroll some normalmente)
+            // • Inventário genuinamente cheio → aborta (scroll fica no chão)
+            if (!added && !InventoryManager.Instance.HasItem(itemToGive.itemID))
+            {
+                Debug.Log("[WorldClue] Inventário cheio — não foi possível coletar.");
+                return;
+            }
         }
 
-        if (!string.IsNullOrEmpty(hintText))
+        if (!string.IsNullOrEmpty(hintText) && NotebookManager.Instance != null)
         {
             NotebookManager.NotebookEntry entry = new NotebookManager.NotebookEntry
             {
