@@ -91,6 +91,80 @@ public static class SocialPuzzleTestHelper
         Debug.Log("[Test] Etapa 2 forçada via coleta simulada de estátuas.");
     }
 
+    // ── Completa Etapa 1 diretamente (sem precisar clicar na UI) ────────────
+    [MenuItem("Tools/Social Puzzle/UTIL - Complete Etapa 1 (assign all names)")]
+    public static void CompleteEtapa1()
+    {
+        if (!Application.isPlaying) { Debug.LogWarning("[Test] Precisa estar em Play Mode."); return; }
+
+        var puzzle = SocialPuzzle.Instance;
+        if (puzzle == null) { Debug.LogError("[Test] SocialPuzzle não encontrado!"); return; }
+        if (puzzle.Etapa != 1) { Debug.LogWarning("[Test] Puzzle já está na Etapa " + puzzle.Etapa + "."); return; }
+
+        var inv = InventoryManager.Instance;
+        if (inv == null) { Debug.LogError("[Test] InventoryManager não encontrado!"); return; }
+
+        // Ordem da mesa: [0]=farao, [1]=camponeses, [2]=escribas, [3]=sacerdotes, [4]=artesaos
+        string[] nameIDs = { "name_farao", "name_camponeses", "name_escribas", "name_sacerdotes", "name_artesaos" };
+
+        for (int i = 0; i < nameIDs.Length; i++)
+        {
+            if (i >= puzzle.pecas.Length || puzzle.pecas[i] == null) continue;
+            var peca = puzzle.pecas[i];
+            if (peca.IsNamed) { Debug.Log("[Test] " + peca.name + " já nomeado, pulando."); continue; }
+
+            var item = FindItem(nameIDs[i]);
+            if (item == null) { Debug.LogWarning("[Test] GlyphItem '" + nameIDs[i] + "' não encontrado nos assets!"); continue; }
+
+            inv.AddItem(item);
+            puzzle.TryAssignName(peca, item);
+            Debug.Log("[Test] Nome '" + item.displayName + "' atribuído a '" + peca.name + "'");
+        }
+
+        Debug.Log("[Test] Etapa 1 concluída! Use 'Force Etapa 2' para pular coleta de estátuas.");
+    }
+
+    // ── Completa Etapa 2 diretamente (sem precisar clicar na pirâmide) ──────
+    [MenuItem("Tools/Social Puzzle/UTIL - Complete Etapa 2 (fill pyramid)")]
+    public static void CompleteEtapa2()
+    {
+        if (!Application.isPlaying) { Debug.LogWarning("[Test] Precisa estar em Play Mode."); return; }
+
+        var puzzle = SocialPuzzle.Instance;
+        if (puzzle == null) { Debug.LogError("[Test] SocialPuzzle não encontrado!"); return; }
+        if (puzzle.Etapa != 2) { Debug.LogWarning("[Test] Puzzle não está na Etapa 2 (atual: " + puzzle.Etapa + ")."); return; }
+
+        var inv = InventoryManager.Instance;
+        if (inv == null) { Debug.LogError("[Test] InventoryManager não encontrado!"); return; }
+
+        // nivelCorreto: 1=Faraó(topo) ... 5=Camponeses(base)
+        int[]    nivelIDs = { 1, 2, 3, 4, 5 };
+        string[] pieceIDs = { "piece_farao", "piece_sacerdotes", "piece_escribas", "piece_artesaos", "piece_camponeses" };
+
+        for (int i = 0; i < nivelIDs.Length; i++)
+        {
+            int nivelCorreto = nivelIDs[i];
+            string pieceID  = pieceIDs[i];
+
+            PiramideNivelUI nivel = null;
+            foreach (var n in puzzle.niveis)
+            {
+                if (n != null && n.nivelCorreto == nivelCorreto) { nivel = n; break; }
+            }
+            if (nivel == null) { Debug.LogWarning("[Test] Nível " + nivelCorreto + " não encontrado!"); continue; }
+            if (nivel.IsFilled) { Debug.Log("[Test] Nível " + nivelCorreto + " já preenchido, pulando."); continue; }
+
+            var item = FindItem(pieceID);
+            if (item == null) { Debug.LogWarning("[Test] GlyphItem '" + pieceID + "' não encontrado!"); continue; }
+
+            inv.AddItem(item);
+            puzzle.TryPlacePiece(nivel, item);
+            Debug.Log("[Test] Peça '" + item.displayName + "' colocada no Nível " + nivelCorreto);
+        }
+
+        Debug.Log("[Test] Etapa 2 concluída!");
+    }
+
     // ── Mostra estado atual do puzzle ─────────────────────────────────────
     [MenuItem("Tools/Social Puzzle/UTIL - Show Puzzle State")]
     public static void ShowState()

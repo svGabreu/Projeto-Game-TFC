@@ -82,59 +82,94 @@ public static class SocialPuzzleAutoSetup
         {
             Undo.RecordObject(peca, "Setup SocialPecaUI");
 
+            // slotButton — procura por nome (contem "Slot") ou qualquer Button nos filhos
             if (peca.slotButton == null)
             {
-                foreach (Transform child in peca.transform.GetComponentsInChildren<Transform>(true))
-                {
-                    if (child.name == "SlotButton" && child.GetComponent<Button>() != null)
-                    {
-                        peca.slotButton = child.GetComponent<Button>();
-                        changes++;
-                        break;
-                    }
-                }
+                Button found = null;
+                // Prioridade: filho com "Slot" no nome
+                foreach (Transform t in peca.GetComponentsInChildren<Transform>(true))
+                    if (t.name.Contains("Slot") && t.TryGetComponent<Button>(out var b)) { found = b; break; }
+                // Fallback: qualquer Button nos filhos
+                if (found == null) found = peca.GetComponentInChildren<Button>(true);
+                if (found != null) { peca.slotButton = found; changes++; }
             }
 
+            // slotLabel — procura por nome ou qualquer TMP
             if (peca.slotLabel == null)
             {
-                foreach (Transform child in peca.transform.GetComponentsInChildren<Transform>(true))
-                {
-                    if (child.name == "SlotLabel" && child.GetComponent<TextMeshProUGUI>() != null)
-                    {
-                        peca.slotLabel = child.GetComponent<TextMeshProUGUI>();
-                        changes++;
-                        break;
-                    }
-                }
+                TextMeshProUGUI found = null;
+                foreach (Transform t in peca.GetComponentsInChildren<Transform>(true))
+                    if ((t.name.Contains("Label") || t.name.Contains("Text")) && t.TryGetComponent<TextMeshProUGUI>(out var tmp)) { found = tmp; break; }
+                if (found == null) found = peca.GetComponentInChildren<TextMeshProUGUI>(true);
+                if (found != null) { peca.slotLabel = found; changes++; }
             }
 
+            // slotBackground — filho Image com "Background" no nome, ou Image do slotButton
             if (peca.slotBackground == null)
             {
-                foreach (Transform child in peca.transform.GetComponentsInChildren<Transform>(true))
-                {
-                    if (child.name == "SlotBackground" && child.GetComponent<Image>() != null)
-                    {
-                        peca.slotBackground = child.GetComponent<Image>();
-                        changes++;
-                        break;
-                    }
-                }
+                Image found = null;
+                foreach (Transform t in peca.GetComponentsInChildren<Transform>(true))
+                    if (t.name.Contains("Background") && t.TryGetComponent<Image>(out var img)) { found = img; break; }
+                // Fallback: Image do próprio slotButton
+                if (found == null && peca.slotButton != null)
+                    found = peca.slotButton.GetComponent<Image>();
+                if (found != null) { peca.slotBackground = found; changes++; }
             }
 
+            // characterImage — filho Image com "Character" no nome, ou Image do objeto raiz
             if (peca.characterImage == null)
             {
-                foreach (Transform child in peca.transform.GetComponentsInChildren<Transform>(true))
-                {
-                    if (child.name == "CharacterImage" && child.GetComponent<Image>() != null)
-                    {
-                        peca.characterImage = child.GetComponent<Image>();
-                        changes++;
-                        break;
-                    }
-                }
+                Image found = null;
+                foreach (Transform t in peca.GetComponentsInChildren<Transform>(true))
+                    if ((t.name.Contains("Character") || t.name.Contains("Icon") || t.name.Contains("Sprite"))
+                        && t.TryGetComponent<Image>(out var img)) { found = img; break; }
+                // Fallback: Image no próprio GO da peça
+                if (found == null) found = peca.GetComponent<Image>();
+                if (found != null) { peca.characterImage = found; changes++; }
             }
 
+            // Garante raycastTarget correto
+            if (peca.slotButton != null && peca.slotButton.targetGraphic != null)
+                peca.slotButton.targetGraphic.raycastTarget = true;
+            if (peca.slotBackground != null) peca.slotBackground.raycastTarget = false;
+            if (peca.characterImage  != null) peca.characterImage.raycastTarget  = false;
+
             EditorUtility.SetDirty(peca);
+        }
+
+        // ── 2b. Reordena PecasContainer para ordem da Mesa: Faraó, Camponeses, Escribas, Sacerdotes, Artesões ──
+        {
+            // Ordem visual desejada (por expectedNameItemID)
+            var mesaOrder = new[] { "name_farao", "name_camponeses", "name_escribas", "name_sacerdotes", "name_artesaos" };
+
+            // Encontra o PecasContainer (pai das peças)
+            Transform pecasContainer = null;
+            if (pecas.Length > 0 && pecas[0] != null)
+                pecasContainer = pecas[0].transform.parent;
+
+            if (pecasContainer != null)
+            {
+                bool reordered = false;
+                for (int i = 0; i < mesaOrder.Length; i++)
+                {
+                    foreach (var p in pecas)
+                    {
+                        if (p.expectedNameItemID == mesaOrder[i] && p.transform.parent == pecasContainer)
+                        {
+                            Undo.RecordObject(pecasContainer, "Reorder PecasContainer");
+                            p.transform.SetSiblingIndex(i);
+                            reordered = true;
+                            break;
+                        }
+                    }
+                }
+                if (reordered)
+                {
+                    EditorUtility.SetDirty(pecasContainer.gameObject);
+                    changes++;
+                    Debug.Log("[AutoSetup] PecasContainer reordenado: Faraó, Camponeses, Escribas, Sacerdotes, Artesões");
+                }
+            }
         }
 
         // ── 3. InteractionPrompt: reposiciona para baixo da tela ──
@@ -172,17 +207,15 @@ public static class SocialPuzzleAutoSetup
         {
             Undo.RecordObject(puzzle, "Setup SocialPuzzle arrays");
 
-            // pecas[]
+            // pecas[] — ordem da mesa: Faraó(0), Camponeses(1), Escribas(2), Sacerdotes(3), Artesões(4)
             if (pecas.Length == 5)
             {
+                var mesaOrder = new[] { "name_farao", "name_camponeses", "name_escribas", "name_sacerdotes", "name_artesaos" };
                 var ordered = new SocialPecaUI[5];
                 foreach (var p in pecas)
                 {
-                    if (p.expectedNameItemID == "name_farao")           ordered[0] = p;
-                    else if (p.expectedNameItemID == "name_sacerdotes") ordered[1] = p;
-                    else if (p.expectedNameItemID == "name_escribas")   ordered[2] = p;
-                    else if (p.expectedNameItemID == "name_artesaos")   ordered[3] = p;
-                    else if (p.expectedNameItemID == "name_camponeses") ordered[4] = p;
+                    int idx = System.Array.IndexOf(mesaOrder, p.expectedNameItemID);
+                    if (idx >= 0) ordered[idx] = p;
                 }
                 puzzle.pecas = ordered;
                 changes++;
@@ -225,7 +258,39 @@ public static class SocialPuzzleAutoSetup
             EditorUtility.SetDirty(puzzle);
         }
 
-        // ── 5. Salva a cena ──
+        // ── 5. SocialUI: configura miniInventoryContainer e miniInventoryContainer2 ──
+        var socialUIArr = Resources.FindObjectsOfTypeAll<SocialUI>()
+            .Where(x => x.gameObject.scene.IsValid())
+            .ToArray();
+        var socialUI = socialUIArr.Length > 0 ? socialUIArr[0] : null;
+
+        if (socialUI != null)
+        {
+            Undo.RecordObject(socialUI, "Setup SocialUI containers");
+
+            // miniInventoryContainer → Content dentro do Etapa1Panel > MiniInventario > Viewport
+            if (socialUI.miniInventoryContainer == null && socialUI.etapa1Panel != null)
+            {
+                var content = FindContentInMiniInventario(socialUI.etapa1Panel);
+                if (content != null) { socialUI.miniInventoryContainer = content; changes++; }
+            }
+
+            // miniInventoryContainer2 → Content dentro do Etapa2Panel > MiniInventario > Viewport
+            // Cria o Content se não existir
+            if (socialUI.etapa2Panel != null)
+            {
+                var content2 = FindOrCreateContentInMiniInventario(socialUI.etapa2Panel, ref changes);
+                if (content2 != null && socialUI.miniInventoryContainer2 != content2)
+                {
+                    socialUI.miniInventoryContainer2 = content2;
+                    changes++;
+                }
+            }
+
+            EditorUtility.SetDirty(socialUI);
+        }
+
+        // ── 6. Salva a cena ──
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
 
@@ -315,6 +380,148 @@ public static class SocialPuzzleAutoSetup
 
         Debug.Log("[PyramidLayout] Layout da pirâmide configurado!");
         EditorUtility.DisplayDialog("Pyramid Layout", "Layout da pirâmide configurado com sucesso!", "OK");
+    }
+    // ── Helpers para miniInventoryContainer ───────────────────────────────────
+
+    /// <summary>
+    /// Procura o Content do ScrollRect dentro de um painel.
+    /// Usa GetComponentsInChildren para ser robusto a qualquer nível de hierarquia e nome.
+    /// Retorna o Content ou null se não encontrado.
+    /// </summary>
+    private static Transform FindContentInMiniInventario(GameObject panel)
+    {
+        // Tenta primeiro o Content já referenciado pelo ScrollRect
+        var scrollRects = panel.GetComponentsInChildren<ScrollRect>(true);
+        if (scrollRects.Length > 0 && scrollRects[0].content != null)
+            return scrollRects[0].content.transform;
+
+        // Fallback: busca por nome na hierarquia completa
+        return FindDescendantByName(panel.transform, "Content");
+    }
+
+    /// <summary>
+    /// Procura ou cria o Content do ScrollRect dentro de um painel.
+    /// Usa GetComponentsInChildren para ser robusto a qualquer nível de hierarquia e nome.
+    /// Se o Content não existir, cria e configura como container horizontal.
+    /// </summary>
+    private static Transform FindOrCreateContentInMiniInventario(GameObject panel, ref int changes)
+    {
+        // Busca o ScrollRect em qualquer nível da hierarquia (ignora nome do objeto)
+        var scrollRects = panel.GetComponentsInChildren<ScrollRect>(true);
+        if (scrollRects.Length == 0)
+        {
+            Debug.LogWarning($"[AutoSetup] Nenhum ScrollRect encontrado em {panel.name}");
+            return null;
+        }
+
+        var scrollRect = scrollRects[0];
+        var miniInv    = scrollRect.transform;
+
+        // Se o ScrollRect já tem Content configurado, usa direto
+        if (scrollRect.content != null)
+        {
+            Debug.Log($"[AutoSetup] ScrollRect em '{miniInv.name}' já tem Content: {scrollRect.content.name}");
+            return scrollRect.content.transform;
+        }
+
+        // Busca o Viewport (referenciado ou pelo nome)
+        Transform viewport = scrollRect.viewport != null
+            ? scrollRect.viewport.transform
+            : FindDescendantByName(miniInv, "Viewport");
+
+        if (viewport == null)
+        {
+            // Cria um Viewport se não existir
+            var vpGO = new GameObject("Viewport");
+            Undo.RegisterCreatedObjectUndo(vpGO, "Create Viewport");
+            vpGO.transform.SetParent(miniInv, false);
+            var vpRT = vpGO.AddComponent<RectTransform>();
+            vpRT.anchorMin = Vector2.zero;
+            vpRT.anchorMax = Vector2.one;
+            vpRT.offsetMin = Vector2.zero;
+            vpRT.offsetMax = Vector2.zero;
+            vpGO.AddComponent<Image>().color = new Color(0, 0, 0, 0);
+            vpGO.AddComponent<Mask>().showMaskGraphic = false;
+            viewport = vpGO.transform;
+            changes++;
+            Debug.Log($"[AutoSetup] Viewport criado em {panel.name}/{miniInv.name}");
+        }
+
+        // Verifica se o Content já existe como filho do Viewport
+        var existingContent = FindDescendantByName(viewport, "Content");
+        if (existingContent != null)
+        {
+            // Garante que o ScrollRect aponta para ele
+            Undo.RecordObject(scrollRect, "Set ScrollRect Content");
+            scrollRect.content  = existingContent.GetComponent<RectTransform>();
+            scrollRect.viewport = viewport.GetComponent<RectTransform>();
+            scrollRect.horizontal = true;
+            scrollRect.vertical   = false;
+            EditorUtility.SetDirty(scrollRect);
+            return existingContent;
+        }
+
+        // Cria o Content
+        var contentGO = new GameObject("Content");
+        Undo.RegisterCreatedObjectUndo(contentGO, "Create MiniInventario Content");
+        contentGO.transform.SetParent(viewport, false);
+
+        var rt = contentGO.AddComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 0f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        rt.pivot     = new Vector2(0f, 0.5f);
+
+        // HorizontalLayoutGroup para empilhar itens horizontalmente
+        var hlg = contentGO.AddComponent<HorizontalLayoutGroup>();
+        hlg.childAlignment         = TextAnchor.MiddleLeft;
+        hlg.spacing                = 8f;
+        hlg.childControlWidth      = false;
+        hlg.childControlHeight     = false;
+        hlg.childForceExpandWidth  = false;
+        hlg.childForceExpandHeight = true;
+        hlg.padding                = new RectOffset(4, 4, 2, 2);
+
+        // ContentSizeFitter para o Content crescer com os itens
+        var csf = contentGO.AddComponent<ContentSizeFitter>();
+        csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        csf.verticalFit   = ContentSizeFitter.FitMode.Unconstrained;
+
+        // Configura o ScrollRect
+        Undo.RecordObject(scrollRect, "Set ScrollRect Content");
+        scrollRect.content  = rt;
+        scrollRect.viewport = viewport.GetComponent<RectTransform>();
+        scrollRect.horizontal = true;
+        scrollRect.vertical   = false;
+        EditorUtility.SetDirty(scrollRect);
+
+        EditorUtility.SetDirty(contentGO);
+        changes++;
+        Debug.Log($"[AutoSetup] Content criado em {panel.name}/{miniInv.name}/Viewport");
+        return contentGO.transform;
+    }
+
+    /// <summary>
+    /// Busca um descendente por nome em qualquer nível da hierarquia (busca em profundidade).
+    /// </summary>
+    private static Transform FindDescendantByName(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == name) return child;
+            var found = FindDescendantByName(child, name);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    /// <summary>Busca filho DIRETO por nome (apenas primeiro nível).</summary>
+    private static Transform FindChildByName(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+            if (child.name == name) return child;
+        return null;
     }
 }
 #endif

@@ -3,40 +3,27 @@ using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviour
 {
-    // -- CONFIGURA��ES DE MOVIMENTO E PULO
-    //Vari�veis 
+    // ── CONFIGURAÇÕES DE MOVIMENTO ────────────────────────────────────────────
     [Header("Movimento")]
-    public float walkSpeed = 5f;     // A velocidade normal 
-    public float sprintSpeed = 9f;   // A velocidade correndo
+    public float walkSpeed    = 5f;
+    public float sprintSpeed  = 9f;
     public float rotationSpeed = 15f;
-    private bool isSprinting = false; // Guarda se o bot�o est� apertado
 
-    [Header("F�sica de Pulo")] // Pulo Curto, Gravidade Din�mica, etc.
-    public float jumpForce = 12f;
-    public float fallMultiplier = 2.5f;
+    [Header("Física de Pulo")]
+    public float jumpForce        = 12f;
+    public float fallMultiplier   = 2.5f;
     public float lowJumpMultiplier = 2f;
-    private bool isJumpPressed = false;
-    private float lastJumpTime = 0f;
 
-    [Header("Sistemas de Game Feel")] // Coyote Time e Jump Buffer
-    public float coyoteTime = 0.15f; // Tempo que o jogador pode pular ap�s sair do ch�o
-    private float coyoteTimeCounter;
+    [Header("Sistemas de Game Feel")]
+    public float coyoteTime     = 0.15f;
     public float jumpBufferTime = 0.2f;
-    private float jumpBufferCounter;
 
-    [Header("Detec��o de Ch�o")] // Usando CheckSphere para detectar o ch�o, com um pequeno delay ap�s pular para evitar "re-gravidade" imediata
+    [Header("Detecção de Chão")]
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float groundCheckRadius = 0.25f;
     [SerializeField] private Vector3 footOffset = new Vector3(0, -0.1f, 0);
-    private bool isGrounded;
 
-    // -- COMPONENTES E REFER�NCIAS
-    private Rigidbody rb;
-    private Animator animator;
-    private Transform cameraTransform;
-    private Vector2 movementInput;
-
-    // -- SONS DE PASSOS
+    // ── SONS DE PASSOS ────────────────────────────────────────────────────────
     [Header("Som de Passos Andar")]
     [SerializeField] private AudioSource walkstepAudioSource;
     [SerializeField] private AudioClip[] walkstepClips;
@@ -49,175 +36,168 @@ public class Player : MonoBehaviour
     [SerializeField] private AudioSource jumpstepAudioSource;
     [SerializeField] private AudioClip[] jumpstepClips;
 
-    //M�todo de inicializa��o, pega os componentes necess�rios e a refer�ncia para a c�mera
-    private void Awake() 
+    // ── ESTADO INTERNO ────────────────────────────────────────────────────────
+    private Rigidbody  rb;
+    private Animator   animator;
+    private Transform  cameraTransform;
+
+    private Vector2 movementInput;
+    private bool    isSprinting       = false;
+    private bool    isJumpPressed     = false;
+    private bool    isGrounded        = false;
+    private float   coyoteTimeCounter = 0f;
+    private float   jumpBufferCounter = 0f;
+    private float   lastJumpTime      = 0f;
+
+    // ── INICIALIZAÇÃO ─────────────────────────────────────────────────────────
+    private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
+        rb       = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+        FindCamera();
+    }
 
+    private void FindCamera()
+    {
+        // Camera.main exige tag "MainCamera" — fallback por nome
         if (Camera.main != null)
-        {
             cameraTransform = Camera.main.transform;
-        }
-    }
-
-    // --- LEITURA DE INPUT ---
-
-    //
-    public void OnMove(InputAction.CallbackContext context) // L� o input de movimento e armazena para usar no FixedUpdate
-    {
-        movementInput = context.ReadValue<Vector2>();
-    }
-
-    // M�todo que gerencia o Jump Buffer e o estado do bot�o de pulo
-    public void OnJump(InputAction.CallbackContext context) 
-    {
-        if (context.started)
+        else
         {
-            jumpBufferCounter = jumpBufferTime;
+            var camGO = GameObject.Find("Main Camera");
+            if (camGO != null) cameraTransform = camGO.transform;
         }
 
-        if (context.started || context.performed) isJumpPressed = true;
-        if (context.canceled) isJumpPressed = false;
+        if (cameraTransform == null)
+            Debug.LogError("[Player] Câmera não encontrada! Certifique-se de que a Main Camera tem tag 'MainCamera'.");
     }
 
-    // M�todo que gerencia o estado de sprint
-    public void OnSprint(InputAction.CallbackContext context)
-    {
-        // Quando aperta o bot�o, � true. Quando solta, � false.
-        if (context.performed) isSprinting = true;
-        if (context.canceled) isSprinting = false;
-    }
-
-    // --- GERENCIAMENTO DE TEMPO E L�GICA R�PIDA ---
-
+    // ── UPDATE: leitura de input direto (Keyboard.current / Mouse) ───────────
     private void Update()
     {
-        // L�gica do Coyote Time
-        if (isGrounded)
-        {
-            coyoteTimeCounter = coyoteTime;
-        }
-        else
-        {
-            coyoteTimeCounter -= Time.deltaTime;
-        }
+        var kb = Keyboard.current;
+        if (kb == null) return;
 
-        // L�gica do Jump Buffer
-        if (jumpBufferCounter > 0)
-        {
-            jumpBufferCounter -= Time.deltaTime;
-        }
+        // Movimento (WASD)
+        float x = (kb.dKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed ? 1f : 0f);
+        float y = (kb.wKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed ? 1f : 0f);
+        movementInput = new Vector2(x, y);
+
+        // Sprint (Shift esquerdo)
+        isSprinting = kb.leftShiftKey.isPressed;
+
+        // Jump buffer
+        if (kb.spaceKey.wasPressedThisFrame)
+            jumpBufferCounter = jumpBufferTime;
+
+        // Saber se o botão ainda está pressionado (para pulo variável)
+        isJumpPressed = kb.spaceKey.isPressed;
+
+        // Coyote Time
+        coyoteTimeCounter = isGrounded
+            ? coyoteTime
+            : Mathf.Max(0f, coyoteTimeCounter - Time.deltaTime);
+
+        // Countdown do jump buffer
+        jumpBufferCounter = Mathf.Max(0f, jumpBufferCounter - Time.deltaTime);
     }
 
-
-    // --- F�SICA E MOVIMENTO ---
-
+    // ── FIXED UPDATE: física ─────────────────────────────────────────────────
     private void FixedUpdate()
     {
-        // 1. Ground Check com Trava de Decolagem (0.1s de delay ap�s pular)
+        // 1. Ground Check (com delay de decolagem para evitar re-trigger imediato)
         if (Time.time > lastJumpTime + 0.1f)
-        {
             isGrounded = Physics.CheckSphere(transform.position + footOffset, groundCheckRadius, groundLayer);
-        }
         else
-        {
             isGrounded = false;
-        }
 
-        // 2. Movimento e Rota��o
-        HandleMovement(); 
+        // 2. Movimento horizontal
+        HandleMovement();
 
-        // 3. Execu��o do Pulo
+        // 3. Pulo
         if (jumpBufferCounter > 0f && coyoteTimeCounter > 0f)
-        {
             ExecuteJump();
-        }
 
+        // 4. Gravidade customizada
         ApplyCustomGravity();
 
-        // 4. Envio de dados para o Animator
-        animator.SetBool("IsGrounded", isGrounded);
-        animator.SetFloat("VelocityY", rb.linearVelocity.y);
-        animator.SetBool("Walk", movementInput.sqrMagnitude > 0.01f);
-        animator.SetBool("Run", isSprinting && movementInput.sqrMagnitude > 0.01f);
+        // 5. Dados para o Animator
+        if (animator != null)
+        {
+            animator.SetBool("IsGrounded", isGrounded);
+            animator.SetFloat("VelocityY",  rb.linearVelocity.y);
+            animator.SetBool("Walk",  movementInput.sqrMagnitude > 0.01f);
+            animator.SetBool("Run",   isSprinting && movementInput.sqrMagnitude > 0.01f);
+        }
     }
 
-    //
-    private void HandleMovement()  
+    // ── MOVIMENTO E ROTAÇÃO ───────────────────────────────────────────────────
+    private void HandleMovement()
     {
-        // Garante que o movimento ignora se a c�mera olha pro c�u ou ch�o
-        Vector3 cameraForward = Vector3.ProjectOnPlane(cameraTransform.forward, Vector3.up).normalized;
-        Vector3 cameraRight = Vector3.ProjectOnPlane(cameraTransform.right, Vector3.up).normalized;
+        // Tenta encontrar câmera se ainda não foi encontrada
+        if (cameraTransform == null) { FindCamera(); return; }
 
-        Vector2 inputComDeadzone = movementInput.sqrMagnitude < 0.01f ? Vector2.zero : movementInput;
-        Vector3 movement = (cameraForward * inputComDeadzone.y + cameraRight * inputComDeadzone.x).normalized;
+        // Direção relativa à câmera (ignora pitch)
+        Vector3 camFwd   = Vector3.ProjectOnPlane(cameraTransform.forward, Vector3.up).normalized;
+        Vector3 camRight = Vector3.ProjectOnPlane(cameraTransform.right,   Vector3.up).normalized;
 
-        // Escolhe a velocidade baseada no bot�o de correr
-        float currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
+        Vector2 input    = movementInput.sqrMagnitude < 0.01f ? Vector2.zero : movementInput;
+        Vector3 movement = (camFwd * input.y + camRight * input.x).normalized;
 
-        rb.MovePosition(rb.position + movement * currentSpeed * Time.fixedDeltaTime);
+        float speed = isSprinting ? sprintSpeed : walkSpeed;
+        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
 
         if (movement != Vector3.zero)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(movement);
-            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
+            Quaternion targetRot = Quaternion.LookRotation(movement);
+            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRot, rotationSpeed * Time.fixedDeltaTime));
         }
     }
 
-    private void ExecuteJump() 
+    private void ExecuteJump()
     {
-        // Zera velocidade Y para evitar pulos super altos se j� estiver subindo numa rampa
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
-        // Limpa buffers e seta cooldown de decolagem
         jumpBufferCounter = 0f;
         coyoteTimeCounter = 0f;
-        isGrounded = false;
-        lastJumpTime = Time.time;
+        isGrounded        = false;
+        lastJumpTime      = Time.time;
 
-        animator.SetTrigger("Jump");
+        animator?.SetTrigger("Jump");
     }
 
-    private void ApplyCustomGravity() // Aplica a gravidade modificada para criar o efeito de pulo mais alto e mais baixo dependendo do tempo que o bot�o � segurado
+    private void ApplyCustomGravity()
     {
         if (rb.linearVelocity.y < 0)
-        {
-            rb.linearVelocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.fixedDeltaTime;
-        }
+            rb.linearVelocity += Vector3.up * Physics.gravity.y * (fallMultiplier   - 1) * Time.fixedDeltaTime;
         else if (rb.linearVelocity.y > 0 && !isJumpPressed)
-        {
             rb.linearVelocity += Vector3.up * Physics.gravity.y * (lowJumpMultiplier - 1) * Time.fixedDeltaTime;
-        }
     }
 
-
-    // --- AUXILIAR VISUAL ---
-
-    private void OnDrawGizmosSelected() // Desenha a esfera de detec��o do ch�o para facilitar o ajuste no editor
+    // ── GIZMOS ────────────────────────────────────────────────────────────────
+    private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position + footOffset, groundCheckRadius);
     }
 
-
-    // --- SONS DE PASSOS ---
-    private void OnStep() 
+    // ── SONS DE PASSOS (chamados por Animation Events) ────────────────────────
+    private void OnStep()
     {
-         int index = Random.Range(0, walkstepClips.Length);
-         walkstepAudioSource.PlayOneShot(walkstepClips[index]);
+        if (walkstepAudioSource == null || walkstepClips.Length == 0) return;
+        walkstepAudioSource.PlayOneShot(walkstepClips[Random.Range(0, walkstepClips.Length)]);
     }
 
     private void OnSprintStep()
     {
-         int index = Random.Range(0, footstepClips.Length);
-         footstepAudioSource.PlayOneShot(footstepClips[index]);
+        if (footstepAudioSource == null || footstepClips.Length == 0) return;
+        footstepAudioSource.PlayOneShot(footstepClips[Random.Range(0, footstepClips.Length)]);
     }
 
     private void OnJumpStep()
     {
-        int index = Random.Range(0, jumpstepClips.Length);
-        jumpstepAudioSource.PlayOneShot(jumpstepClips[index]);
+        if (jumpstepAudioSource == null || jumpstepClips.Length == 0) return;
+        jumpstepAudioSource.PlayOneShot(jumpstepClips[Random.Range(0, jumpstepClips.Length)]);
     }
 }

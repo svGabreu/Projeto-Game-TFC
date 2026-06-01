@@ -3,14 +3,16 @@
 // Singleton que gerencia toda a interface do Puzzle 3 (Pirâmide Social).
 //
 // Fluxo Etapa 1:
-//   1. Jogador clica num slot de nome abaixo de uma peça  → OnPecaSlotClicked()
-//   2. Jogador clica num item do mini inventário          → OnInventoryItemClicked()
+//   1. Jogador clica num item do mini inventário (fica amarelo = selecionado)
+//   2. Jogador clica no slot abaixo da figura correta  → OnPecaSlotClicked()
 //   3. Puzzle valida; se correto, slot fica verde.
+//   OU: clica no slot primeiro, depois no item.
 //
 // Fluxo Etapa 2:
-//   1. Jogador clica num item do mini inventário          → OnInventoryItemClicked()
-//   2. Jogador clica num nível da pirâmide               → OnNivelClicked()
+//   1. Jogador clica num item do mini inventário (fica amarelo = selecionado)
+//   2. Jogador clica no nível correto da pirâmide → OnNivelClicked()
 //   3. Puzzle valida; se correto, nível fica dourado.
+//   OU: clica no nível primeiro, depois no item.
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -40,9 +42,12 @@ public class SocialUI : MonoBehaviour
     public TextMeshProUGUI labelEtapa;
     public Button closePanelButton;
 
-    [Header("Mini Inventário")]
-    public Transform miniInventoryContainer;
-    public GameObject miniSlotPrefab;       // mesmo prefab usado no Puzzle 2
+    [Header("Mini Inventário — Etapa 1 (dentro do Etapa1Panel)")]
+    public Transform miniInventoryContainer;   // Content do ScrollRect dentro do Etapa1Panel
+    public GameObject miniSlotPrefab;
+
+    [Header("Mini Inventário — Etapa 2 (dentro do Etapa2Panel)")]
+    public Transform miniInventoryContainer2;  // Content do ScrollRect dentro do Etapa2Panel
 
     // ---- Estado ----
     private bool isOpen = false;
@@ -50,7 +55,12 @@ public class SocialUI : MonoBehaviour
     private SocialPecaUI pendingPeca = null;
     private PiramideNivelUI pendingNivel = null;
 
-    private readonly List<GameObject> miniSlots = new List<GameObject>();
+    private readonly List<GameObject> miniSlots  = new List<GameObject>();
+    private GameObject selectedSlotGO = null;   // slot destacado no mini-inventário
+
+    // Cores de destaque do slot selecionado
+    private static readonly Color COLOR_SELECTED   = new Color(1f, 0.85f, 0.1f);  // amarelo
+    private static readonly Color COLOR_UNSELECTED = Color.white;
 
     // --------------------------------------------------------
     private void Awake()
@@ -58,6 +68,19 @@ public class SocialUI : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(transform.root.gameObject);
+
+        // Garante Sort Order alto o suficiente para ficar acima de outros painéis (ex: UIGlobal = 10)
+        var canvas = GetComponentInParent<Canvas>();
+        if (canvas == null) canvas = GetComponent<Canvas>();
+        if (canvas != null)
+        {
+            if (canvas.sortingOrder < 20)
+                canvas.sortingOrder = 20;
+
+            if (canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+                canvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+        }
+
         if (painelRaiz != null) painelRaiz.SetActive(false);
     }
 
@@ -83,15 +106,19 @@ public class SocialUI : MonoBehaviour
     {
         if (puzzle == null) return;
 
+        // Fecha outros painéis que possam estar bloqueando cliques
+        if (InventoryUI.Instance != null && InventoryUI.Instance.IsOpen())
+            InventoryUI.Instance.ClosePanel();
+
         isOpen = true;
         selectedItem  = null;
         pendingPeca   = null;
         pendingNivel  = null;
+        selectedSlotGO = null;
 
         if (painelRaiz != null) painelRaiz.SetActive(true);
 
-        // Se o modo for Mesa, mostra Etapa 1; se Mural, mostra Etapa 2.
-        // Respeita também o estado atual do puzzle (não permite regredir).
+        // Mesa → Etapa 1; Mural → Etapa 2 (se puzzle já chegou lá)
         bool showEtapa2 = (mode == PanelMode.Mural) && puzzle.Etapa >= 2;
         if (etapa1Panel != null) etapa1Panel.SetActive(!showEtapa2);
         if (etapa2Panel != null) etapa2Panel.SetActive(showEtapa2);
@@ -107,9 +134,10 @@ public class SocialUI : MonoBehaviour
     public void ClosePanel()
     {
         isOpen = false;
-        selectedItem  = null;
-        pendingPeca   = null;
-        pendingNivel  = null;
+        selectedItem   = null;
+        pendingPeca    = null;
+        pendingNivel   = null;
+        selectedSlotGO = null;
 
         DeselectAllNiveis();
 
@@ -132,36 +160,90 @@ public class SocialUI : MonoBehaviour
     }
 
     // --------------------------------------------------------
-    // Mini Inventário — mostra apenas itens relevantes para a etapa
+    // Mini Inventário
+    // Usa miniInventoryContainer  para Etapa 1 (dentro do Etapa1Panel ativo)
+    // Usa miniInventoryContainer2 para Etapa 2 (dentro do Etapa2Panel ativo)
+    // Isso evita instanciar itens em um pai inativo.
     // --------------------------------------------------------
     private void RefreshMiniInventory()
     {
+        // Destrói slots anteriores
         foreach (var s in miniSlots) if (s != null) Destroy(s);
         miniSlots.Clear();
+        selectedSlotGO = null;
 
-        if (miniInventoryContainer == null || miniSlotPrefab == null || puzzle == null) return;
+        if (miniSlotPrefab == null || puzzle == null) return;
+        if (InventoryManager.Instance == null) return;
 
-        string prefix = puzzle.Etapa == 1 ? "name_" : "piece_";
+        // Escolhe o container correto para a etapa atual
+        bool etapa2Ativa = puzzle.Etapa >= 2;
+        Transform container = etapa2Ativa ? miniInventoryContainer2 : miniInventoryContainer;
+        if (container == null)
+        {
+            Debug.LogWarning("[SocialUI] miniInventoryContainer" + (etapa2Ativa ? "2" : "") + " não atribuído!");
+            return;
+        }
+
+        string prefix = etapa2Ativa ? "piece_" : "name_";
 
         foreach (var item in InventoryManager.Instance.GetAllItems())
         {
             if (!item.itemID.StartsWith(prefix)) continue;
 
-            var go = Instantiate(miniSlotPrefab, miniInventoryContainer);
+            var go = Instantiate(miniSlotPrefab, container);
             miniSlots.Add(go);
 
-            // Ícone
-            var img = go.GetComponentInChildren<Image>();
-            if (img != null && item.itemSprite != null) img.sprite = item.itemSprite;
+            // Ícone (primeiro Image encontrado em filhos)
+            var imgs = go.GetComponentsInChildren<Image>(true);
+            foreach (var img in imgs)
+            {
+                // Pula o Image raiz (fundo do botão)
+                if (img.gameObject == go) continue;
+                if (item.itemSprite != null) img.sprite = item.itemSprite;
+                break;
+            }
 
             // Label
-            var tmp = go.GetComponentInChildren<TextMeshProUGUI>();
+            var tmp = go.GetComponentInChildren<TextMeshProUGUI>(true);
             if (tmp != null) tmp.text = item.displayName;
 
-            // Clique
-            var btn = go.GetComponent<Button>();
-            var captured = item;
-            if (btn != null) btn.onClick.AddListener(() => OnInventoryItemClicked(captured));
+            // Botão — procura no root e em filhos
+            var btn = go.GetComponent<Button>() ?? go.GetComponentInChildren<Button>(true);
+            if (btn != null)
+            {
+                btn.interactable = true;
+                // Garante que o targetGraphic recebe raycasts
+                if (btn.targetGraphic != null)
+                    btn.targetGraphic.raycastTarget = true;
+
+                var capturedItem = item;
+                var capturedGO   = go;
+                btn.onClick.AddListener(() => OnInventoryItemClicked(capturedItem, capturedGO));
+            }
+            else
+            {
+                Debug.LogWarning($"[SocialUI] MiniSlot instanciado sem Button: {go.name}");
+            }
+        }
+    }
+
+    // --------------------------------------------------------
+    // Highlight de seleção no mini-inventário
+    // --------------------------------------------------------
+    private void SetSlotHighlight(GameObject slotGO, bool highlight)
+    {
+        if (slotGO == null) return;
+        var btn = slotGO.GetComponent<Button>() ?? slotGO.GetComponentInChildren<Button>(true);
+        if (btn != null && btn.targetGraphic != null)
+            btn.targetGraphic.color = highlight ? COLOR_SELECTED : COLOR_UNSELECTED;
+    }
+
+    private void ClearSlotHighlight()
+    {
+        if (selectedSlotGO != null)
+        {
+            SetSlotHighlight(selectedSlotGO, false);
+            selectedSlotGO = null;
         }
     }
 
@@ -176,15 +258,16 @@ public class SocialUI : MonoBehaviour
 
         if (selectedItem != null)
         {
-            // Já tem item selecionado → tenta atribuir imediatamente
+            // Item já selecionado → atribui imediatamente
             puzzle.TryAssignName(peca, selectedItem);
             selectedItem = null;
             pendingPeca  = null;
+            ClearSlotHighlight();
             RefreshMiniInventory();
         }
         else
         {
-            // Marca a peça como pendente (jogador vai escolher o nome agora)
+            // Aguarda o jogador escolher o nome no mini-inventário
             pendingPeca = peca;
         }
     }
@@ -199,12 +282,13 @@ public class SocialUI : MonoBehaviour
             puzzle.TryPlacePiece(nivel, selectedItem);
             selectedItem  = null;
             pendingNivel  = null;
+            ClearSlotHighlight();
             DeselectAllNiveis();
             RefreshMiniInventory();
         }
         else
         {
-            // Marca nível como pendente
+            // Aguarda o jogador escolher a peça no mini-inventário
             DeselectAllNiveis();
             pendingNivel = nivel;
             nivel.SetSelectionHighlight(true);
@@ -212,17 +296,22 @@ public class SocialUI : MonoBehaviour
     }
 
     /// <summary>Jogador clicou num item do mini inventário.</summary>
-    public void OnInventoryItemClicked(GlyphItem item)
+    public void OnInventoryItemClicked(GlyphItem item, GameObject slotGO = null)
     {
-        selectedItem = item;
+        // Destaca o slot clicado
+        ClearSlotHighlight();
+        selectedItem   = item;
+        selectedSlotGO = slotGO;
+        SetSlotHighlight(slotGO, true);
 
         if (puzzle == null) return;
 
         if (puzzle.Etapa == 1 && pendingPeca != null)
         {
             puzzle.TryAssignName(pendingPeca, item);
-            selectedItem = null;
-            pendingPeca  = null;
+            selectedItem   = null;
+            pendingPeca    = null;
+            ClearSlotHighlight();
             RefreshMiniInventory();
         }
         else if (puzzle.Etapa == 2 && pendingNivel != null)
@@ -230,10 +319,11 @@ public class SocialUI : MonoBehaviour
             puzzle.TryPlacePiece(pendingNivel, item);
             selectedItem  = null;
             pendingNivel  = null;
+            ClearSlotHighlight();
             DeselectAllNiveis();
             RefreshMiniInventory();
         }
-        // Se não houver pendente, o item fica "selecionado" aguardando clique na peça/nível
+        // Se não houver pendente, item fica selecionado (amarelo) aguardando clique na peça/nível
     }
 
     // --------------------------------------------------------
@@ -243,8 +333,9 @@ public class SocialUI : MonoBehaviour
     {
         if (etapa1Panel != null) etapa1Panel.SetActive(false);
         if (etapa2Panel != null) etapa2Panel.SetActive(true);
-        selectedItem = null;
-        pendingPeca  = null;
+        selectedItem   = null;
+        pendingPeca    = null;
+        selectedSlotGO = null;
         UpdateLabel();
         RefreshMiniInventory();
         Debug.Log("[SocialUI] Etapa 2 desbloqueada — Pirâmide disponível!");
@@ -256,7 +347,6 @@ public class SocialUI : MonoBehaviour
     public void OnPuzzleComplete()
     {
         UpdateLabel();
-        // Não fecha automaticamente — permite o jogador ver o resultado
         Debug.Log("[SocialUI] Puzzle 3 concluído!");
     }
 

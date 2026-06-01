@@ -32,9 +32,33 @@ public class SocialPecaUI : MonoBehaviour
     // --------------------------------------------------------
     private void Start()
     {
+        // Auto-acha o Button se não foi atribuído no Inspector/AutoSetup
+        if (slotButton == null)
+        {
+            // Procura por Button nos filhos com nome "SlotButton", depois qualquer Button
+            foreach (Transform t in GetComponentsInChildren<Transform>(true))
+                if (t.name.Contains("Slot") && t.TryGetComponent<Button>(out var b)) { slotButton = b; break; }
+
+            if (slotButton == null)
+                slotButton = GetComponentInChildren<Button>(true);
+
+            if (slotButton != null)
+                Debug.Log($"[SocialPecaUI] slotButton auto-encontrado: {slotButton.gameObject.name} em {name}");
+            else
+                Debug.LogWarning($"[SocialPecaUI] Nenhum Button encontrado em {name} — cliques não funcionarão!");
+        }
+
         if (slotButton     != null) slotButton.onClick.AddListener(OnSlotClicked);
         if (slotBackground != null) slotBackground.color = defaultColor;
         if (slotLabel      != null) slotLabel.text       = "— ? —";
+
+        // Imagens visuais não devem bloquear raycasts — só o botão deve receber cliques
+        if (slotBackground != null) slotBackground.raycastTarget = false;
+        if (characterImage != null) characterImage.raycastTarget = false;
+
+        // Garante que o botão recebe raycasts
+        if (slotButton != null && slotButton.targetGraphic != null)
+            slotButton.targetGraphic.raycastTarget = true;
 
         // Apaga texto padrão "Button" do filho interno do SlotButton
         if (slotButton != null)
