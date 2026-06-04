@@ -21,6 +21,33 @@ public class WorldClue : MonoBehaviour, IInteractable
 
     private bool collected = false;
 
+    // Chave de persistência: usa entryID se definido, senão usa itemID, senão o nome do objeto
+    private string SaveKey => "clue.collected." +
+        (!string.IsNullOrEmpty(entryID)          ? entryID          :
+         itemToGive != null                       ? itemToGive.itemID :
+                                                   gameObject.name);
+
+    // --------------------------------------------------------
+    private void Start()
+    {
+        // Verificação 1: GameStateManager registrou a coleta
+        bool jaRegistrado = GameStateManager.Instance != null
+                            && GameStateManager.Instance.GetBool(SaveKey);
+
+        // Verificação 2: item já está no inventário (fonte mais confiável)
+        bool jaNoInventario = itemToGive != null
+                              && InventoryManager.Instance != null
+                              && InventoryManager.Instance.HasItem(itemToGive.itemID);
+
+        if (jaRegistrado || jaNoInventario)
+        {
+            collected = true;
+            gameObject.SetActive(false);
+            Debug.Log($"[WorldClue] '{gameObject.name}' já coletado — ocultado. " +
+                      $"(GameState={jaRegistrado}, Inventário={jaNoInventario})");
+        }
+    }
+
     // --------------------------------------------------------
     // E pressionado pelo jogador
     // --------------------------------------------------------
@@ -73,6 +100,9 @@ public class WorldClue : MonoBehaviour, IInteractable
         }
 
         collected = true;
+
+        // Persiste a coleta — sobrevive entre recargas de cena
+        GameStateManager.Instance?.SetBool(SaveKey, true);
 
         if (destroyAfterCollect)
             Destroy(gameObject);

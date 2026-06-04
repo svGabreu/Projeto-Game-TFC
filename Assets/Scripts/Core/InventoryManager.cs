@@ -15,7 +15,8 @@ public class InventoryManager : MonoBehaviour
     public static InventoryManager Instance { get; private set; }
 
     [Header("Configuração")]
-    public int maxSlots = 12;
+    [Tooltip("Limite de itens. 0 = sem limite.")]
+    public int maxSlots = 0; // 0 = ilimitado
 
     // Lista de itens atualmente no inventário
     private List<GlyphItem> items = new List<GlyphItem>();
@@ -42,7 +43,7 @@ public class InventoryManager : MonoBehaviour
     // --------------------------------------------------------
     public bool AddItem(GlyphItem item)
     {
-        if (items.Count >= maxSlots)
+        if (maxSlots > 0 && items.Count >= maxSlots)
         {
             Debug.Log("Inventário cheio!");
             return false;

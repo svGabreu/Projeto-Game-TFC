@@ -113,16 +113,15 @@ public class RioDaVidaPuzzle : MonoBehaviour
         foreach (var q in quadros)
             if (!q.IsNamed) return;
 
-        // Todos nomeados corretamente
         Debug.Log("[RioDaVida] Etapa 1 completa!");
         OnEtapa1Complete?.Invoke();
 
-        // Embaralha visualmente os quadros para a Etapa 2
         EmbaralharQuadros();
 
         etapa = 2;
         foreach (var q in quadros) q.EnableEtapa2();
 
+        SaveState(); // salva imediatamente ao mudar de etapa
         OnEtapa2Unlocked?.Invoke();
         Debug.Log("[RioDaVida] Etapa 2 desbloqueada — ordene os quadros!");
     }
@@ -195,6 +194,7 @@ public class RioDaVidaPuzzle : MonoBehaviour
         Debug.Log("[RioDaVida] Puzzle completo! Ordem correta: Akhet → Peret → Shemu");
         etapa = 3;
 
+        SaveState(); // salva imediatamente ao concluir o puzzle
         foreach (var q in quadros) q.PlayCompletionEffect();
         OnPuzzleCompleted?.Invoke();
         DarRecompensa();

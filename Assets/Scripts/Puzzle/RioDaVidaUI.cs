@@ -19,12 +19,17 @@ public class RioDaVidaUI : MonoBehaviour
     [Header("Referência ao Puzzle")]
     public RioDaVidaPuzzle puzzle;
 
-    [Header("Mini-inventário (mostra pergaminhos coletados)")]
+    [Header("Mini-inventário")]
     public Transform miniInventoryContainer;
     public GameObject miniSlotPrefab;       // mesmo MiniSlot prefab do MuralUI
 
     [Header("Textos de estado")]
     public TextMeshProUGUI labelEtapa;      // opcional — exibe "Etapa 1" / "Etapa 2"
+
+    [Header("Textos das etapas")]
+    [SerializeField] private string textoEtapa1 = "Etapa 1 — Nomeie cada estação do Nilo";
+    [SerializeField] private string textoEtapa2 = "Etapa 2 — Ordene as estações do calendário do Nilo";
+    [SerializeField] private string textoConcluido = "Puzzle concluído!";
 
     [Header("Botão Fechar")]
     public Button closePanelButton;         // botão X para fechar o painel
@@ -190,9 +195,9 @@ public class RioDaVidaUI : MonoBehaviour
 
         labelEtapa.text = puzzle.Etapa switch
         {
-            1 => "Etapa 1 — Nomeie cada estação do Nilo",
-            2 => "Etapa 2 — Ordene as estações (Akhet → Peret → Shemu)",
-            _ => "Puzzle concluído!"
+            1 => textoEtapa1,
+            2 => textoEtapa2,
+            _ => textoConcluido
         };
     }
 }
