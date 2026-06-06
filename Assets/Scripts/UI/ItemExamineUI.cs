@@ -97,13 +97,21 @@ public class ItemExamineUI : MonoBehaviour
         pendingSource = null;
     }
 
+    // Fecha só o visual — não limpa pendingSource (OnColetar precisa dele depois)
     private void Close()
     {
         isOpen = false;
         if (painelRaiz != null) painelRaiz.SetActive(false);
-        Time.timeScale       = 1f;
-        Cursor.lockState     = CursorLockMode.Locked;
-        Cursor.visible       = false;
+        Time.timeScale   = 1f;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible   = false;
+    }
+
+    // Versão pública para o SceneTransitionManager fechar tudo — aqui sim limpa
+    public void ClosePanel()
+    {
+        pendingSource = null;
+        Close();
     }
 
     public bool IsOpen() => isOpen;

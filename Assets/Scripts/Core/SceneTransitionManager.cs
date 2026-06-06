@@ -115,6 +115,10 @@ public class SceneTransitionManager : MonoBehaviour
     {
         IsTransitioning = true;
 
+        // Fecha todos os painéis antes de transitar — evita que estado de UI
+        // de uma cena vaze para a próxima e bloqueie interações
+        CloseAllPanels();
+
         // Garante Time.timeScale normal (pode estar 0 se painel de UI estava aberto)
         Time.timeScale = 1f;
         // Trava cursor durante a transição
@@ -169,6 +173,21 @@ public class SceneTransitionManager : MonoBehaviour
 
         c.a = toAlpha;
         fadeImage.color = c;
+    }
+
+    // ── Fecha todos os painéis antes de transitar ─────────────────────────────
+    private void CloseAllPanels()
+    {
+        // Fecha cada painel persistente pelo singleton, se existir e estiver aberto
+        if (InventoryUI.Instance   != null && InventoryUI.Instance.IsOpen())   InventoryUI.Instance.ClosePanel();
+        if (SocialUI.Instance      != null && SocialUI.Instance.IsOpen())      SocialUI.Instance.ClosePanel();
+        if (RioDaVidaUI.Instance   != null && RioDaVidaUI.Instance.IsOpen())   RioDaVidaUI.Instance.ClosePanel();
+        if (ItemExamineUI.Instance != null && ItemExamineUI.Instance.IsOpen()) ItemExamineUI.Instance.ClosePanel();
+
+        // MuralUI não é singleton — fecha qualquer instância ativa na cena
+        var murais = FindObjectsByType<MuralUI>(FindObjectsSortMode.None);
+        foreach (var m in murais)
+            if (m.IsOpen()) m.CloseMural();
     }
 
     // ── Utilitário: limpa o spawn ID após uso (chamado por SpawnPoint) ────────

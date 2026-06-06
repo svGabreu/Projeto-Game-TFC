@@ -16,67 +16,97 @@ public class RioDaVidaPuzzle : MonoBehaviour
     public RioDaVidaQuadroUI[] quadros = new RioDaVidaQuadroUI[3];
 
     [Header("Recompensa")]
-    public GlyphItem rewardItem;                // Amuleto da Vida
-    public GameObject rewardWorldObject;        // objeto físico na cena (ativar ao concluir)
+    public GlyphItem rewardItem;
+    public GameObject rewardWorldObject;
 
     [Header("Eventos")]
-    public UnityEvent OnEtapa1Complete;         // dispara ao nomear todos os quadros
-    public UnityEvent OnEtapa2Unlocked;         // dispara ao embaralhar e liberar Etapa 2
-    public UnityEvent OnPuzzleCompleted;        // dispara ao ordenar corretamente
+    public UnityEvent OnEtapa1Complete;
+    public UnityEvent OnEtapa2Unlocked;
+    public UnityEvent OnPuzzleCompleted;
 
-    // ---- Estado ----
     private int etapa = 1;
     private RioDaVidaQuadroUI quadroSelecionado = null;
 
     public int Etapa => etapa;
 
-    // --------------------------------------------------------
-    // Ciclo de vida — salva/restaura via GameStateManager
-    // --------------------------------------------------------
+    private const string KEY = "rdv.";
+    private const string KEY_ETAPA = "rdv.etapa";
+
     private void Start()
     {
         RestoreState();
     }
 
-    private void OnDestroy()
+    private void SaveEtapa()
     {
-        SaveState();
+        if (GameStateManager.Instance != null)
+            GameStateManager.Instance.SetInt(KEY_ETAPA, etapa);
+        else
+            Debug.LogError("[RioDaVida] SaveEtapa FALHOU - GSM null");
     }
 
-    // Prefixo único deste puzzle no GameStateManager
-    private const string KEY = "rdv.";
-
-    private void SaveState()
+    private void SaveNamed(int i)
     {
-        var gsm = GameStateManager.Instance;
-        if (gsm == null) return;
-
-        gsm.SetInt(KEY + "etapa", etapa);
-        for (int i = 0; i < quadros.Length && i < 3; i++)
+        if (GameStateManager.Instance != null)
         {
-            gsm.SetBool  (KEY + "named"  + i, quadros[i].IsNamed);
-            // scrollDisplayNames são salvos em TryAssignScroll
+            GameStateManager.Instance.SetBool(KEY + "named" + i, quadros[i].IsNamed);
+            // CORRECAO: salva a etapa atual junto com o primeiro named
+            // para que RestoreState() encontre a chave rdv.etapa mesmo
+            // quando o jogador sai antes de completar a etapa 1
+            GameStateManager.Instance.SetInt(KEY_ETAPA, etapa);
         }
+        else
+        {
+            Debug.LogError("[RioDaVida] SaveNamed FALHOU - GSM null");
+        }
+    }
+
+    private void SaveScrollName(int i, string name)
+    {
+        if (GameStateManager.Instance != null)
+            GameStateManager.Instance.SetString(KEY + "scrollName" + i, name);
+    }
+
+    private void SaveOrdem()
+    {
+        if (GameStateManager.Instance == null) return;
+        for (int i = 0; i < quadros.Length; i++)
+            GameStateManager.Instance.SetInt(KEY + "siblingIdx" + i, quadros[i].transform.GetSiblingIndex());
     }
 
     private void RestoreState()
     {
         var gsm = GameStateManager.Instance;
-        if (gsm == null || !gsm.HasKey(KEY + "etapa")) return;
+        if (gsm == null || !gsm.HasKey(KEY_ETAPA))
+        {
+            Debug.Log("[RioDaVida] RestoreState - sem estado salvo.");
+            return;
+        }
 
-        // Restaura quadros nomeados
         for (int i = 0; i < quadros.Length && i < 3; i++)
         {
             if (gsm.GetBool(KEY + "named" + i))
                 quadros[i].RestoreNamed(gsm.GetString(KEY + "scrollName" + i));
         }
 
-        etapa = gsm.GetInt(KEY + "etapa", 1);
+        etapa = gsm.GetInt(KEY_ETAPA, 1);
 
         if (etapa >= 2)
         {
             foreach (var q in quadros) q.EnableEtapa2();
-            EmbaralharQuadros();
+
+            if (gsm.HasKey(KEY + "siblingIdx0"))
+            {
+                for (int i = 0; i < quadros.Length; i++)
+                {
+                    int savedIdx = gsm.GetInt(KEY + "siblingIdx" + i, i);
+                    quadros[i].transform.SetSiblingIndex(savedIdx);
+                }
+            }
+            else
+            {
+                EmbaralharQuadros();
+            }
         }
 
         if (etapa >= 3)
@@ -85,27 +115,24 @@ public class RioDaVidaPuzzle : MonoBehaviour
             RioDaVidaUI.Instance?.OnPuzzleComplete();
         }
 
-        Debug.Log($"[RioDaVida] Estado restaurado — Etapa {etapa}");
+        Debug.Log("[RioDaVida] Estado restaurado - Etapa " + etapa);
     }
 
-    // --------------------------------------------------------
-    // Etapa 1: tenta atribuir pergaminho ao quadro
-    // Chamado por RioDaVidaUI.OnSlotClicked()
-    // --------------------------------------------------------
     public void TryAssignScroll(RioDaVidaQuadroUI quadro, GlyphItem item)
     {
         if (etapa != 1) return;
 
         bool acerto = quadro.TryAssignScroll(item);
-        if (acerto)
-        {
-            // Persiste o nome do scroll para restauração futura
-            int idx = System.Array.IndexOf(quadros, quadro);
-            if (GameStateManager.Instance != null && idx >= 0)
-                GameStateManager.Instance.SetString(KEY + "scrollName" + idx, item.displayName);
+        if (!acerto) return;
 
-            ChecarEtapa1();
+        int idx = System.Array.IndexOf(quadros, quadro);
+        if (idx >= 0)
+        {
+            SaveNamed(idx);
+            SaveScrollName(idx, item.displayName);
         }
+
+        ChecarEtapa1();
     }
 
     private void ChecarEtapa1()
@@ -115,18 +142,17 @@ public class RioDaVidaPuzzle : MonoBehaviour
 
         Debug.Log("[RioDaVida] Etapa 1 completa!");
         OnEtapa1Complete?.Invoke();
-
         EmbaralharQuadros();
 
         etapa = 2;
         foreach (var q in quadros) q.EnableEtapa2();
 
-        SaveState(); // salva imediatamente ao mudar de etapa
+        SaveEtapa();
+        SaveOrdem();
+
         OnEtapa2Unlocked?.Invoke();
-        Debug.Log("[RioDaVida] Etapa 2 desbloqueada — ordene os quadros!");
     }
 
-    // Embaralha simplesmente trocando o 1º com o 3º
     private void EmbaralharQuadros()
     {
         if (quadros.Length < 3) return;
@@ -136,33 +162,26 @@ public class RioDaVidaPuzzle : MonoBehaviour
         quadros[2].transform.SetSiblingIndex(idxA);
     }
 
-    // --------------------------------------------------------
-    // Etapa 2: jogador clica nos quadros para trocá-los
-    // Chamado por RioDaVidaUI.OnQuadroClicked()
-    // --------------------------------------------------------
     public void HandleQuadroClick(RioDaVidaQuadroUI quadro)
     {
         if (etapa != 2) return;
 
         if (quadroSelecionado == null)
         {
-            // Primeira seleção
             quadroSelecionado = quadro;
             quadro.SetSelectionHighlight(true);
-            Debug.Log($"[RioDaVida] Quadro selecionado: {quadro.name}");
         }
         else if (quadroSelecionado == quadro)
         {
-            // Clicou no mesmo → deseleciona
             quadroSelecionado.SetSelectionHighlight(false);
             quadroSelecionado = null;
         }
         else
         {
-            // Segunda seleção → troca posições
             TrocarQuadros(quadroSelecionado, quadro);
             quadroSelecionado.SetSelectionHighlight(false);
             quadroSelecionado = null;
+            SaveOrdem();
             ChecarEtapa2();
         }
     }
@@ -173,28 +192,21 @@ public class RioDaVidaPuzzle : MonoBehaviour
         int idxB = b.transform.GetSiblingIndex();
         a.transform.SetSiblingIndex(idxB);
         b.transform.SetSiblingIndex(idxA);
-        Debug.Log($"[RioDaVida] Trocou '{a.name}' ↔ '{b.name}'");
     }
 
     private void ChecarEtapa2()
     {
-        // Ordena os quadros pelo sibling index atual
         var ordenados = new List<RioDaVidaQuadroUI>(quadros);
         ordenados.Sort((a, b) =>
             a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex()));
 
-        // Verifica se a sequência de correctPosition é 1, 2, 3
         for (int i = 0; i < ordenados.Count; i++)
-        {
-            if (ordenados[i].CorrectPosition != i + 1)
-                return; // ordem errada
-        }
+            if (ordenados[i].CorrectPosition != i + 1) return;
 
-        // Ordem correta!
-        Debug.Log("[RioDaVida] Puzzle completo! Ordem correta: Akhet → Peret → Shemu");
+        Debug.Log("[RioDaVida] Puzzle completo!");
         etapa = 3;
+        SaveEtapa();
 
-        SaveState(); // salva imediatamente ao concluir o puzzle
         foreach (var q in quadros) q.PlayCompletionEffect();
         OnPuzzleCompleted?.Invoke();
         DarRecompensa();
@@ -203,10 +215,8 @@ public class RioDaVidaPuzzle : MonoBehaviour
     private void DarRecompensa()
     {
         if (rewardItem != null)
-        {
             InventoryManager.Instance.AddItem(rewardItem);
-            Debug.Log($"[RioDaVida] Recompensa: {rewardItem.displayName}");
-        }
+
         if (rewardWorldObject != null)
             rewardWorldObject.SetActive(true);
 

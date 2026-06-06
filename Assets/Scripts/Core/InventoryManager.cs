@@ -2,45 +2,34 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-// ============================================================
-// InventoryManager.cs
-// Singleton que gerencia os itens coletados pelo jogador.
-// Coloque este script num GameObject chamado "GameManager"
-// na cena e marque como DontDestroyOnLoad se quiser persistir
-// entre cenas.
-// ============================================================
-
 public class InventoryManager : MonoBehaviour
 {
     public static InventoryManager Instance { get; private set; }
 
     [Header("Configuração")]
     [Tooltip("Limite de itens. 0 = sem limite.")]
-    public int maxSlots = 0; // 0 = ilimitado
+    public int maxSlots = 0;
 
-    // Lista de itens atualmente no inventário
     private List<GlyphItem> items = new List<GlyphItem>();
-
-    // Evento disparado sempre que o inventário muda.
-    // A UI do inventário pode se inscrever aqui para atualizar.
     public UnityEvent OnInventoryChanged = new UnityEvent();
 
     private void Awake()
     {
-        // Garante que só existe uma instância
-        if (Instance != null && Instance != this)
+        if (!ReferenceEquals(Instance, null) && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
         Instance = this;
+        transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
     }
 
-    // --------------------------------------------------------
-    // Adiciona um item. Retorna false se o inventário estiver
-    // cheio ou o item já existir.
-    // --------------------------------------------------------
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
     public bool AddItem(GlyphItem item)
     {
         if (maxSlots > 0 && items.Count >= maxSlots)
@@ -48,23 +37,17 @@ public class InventoryManager : MonoBehaviour
             Debug.Log("Inventário cheio!");
             return false;
         }
-
         if (items.Contains(item))
         {
             Debug.Log($"Item '{item.displayName}' já está no inventário.");
             return false;
         }
-
         items.Add(item);
         OnInventoryChanged.Invoke();
         Debug.Log($"Item adicionado: {item.displayName}");
         return true;
     }
 
-    // --------------------------------------------------------
-    // Remove um item pelo ID (usado quando o mural consome o
-    // item ao ser encaixado no slot).
-    // --------------------------------------------------------
     public bool RemoveItem(string itemID)
     {
         GlyphItem found = items.Find(i => i.itemID == itemID);
@@ -77,23 +60,7 @@ public class InventoryManager : MonoBehaviour
         return false;
     }
 
-    // --------------------------------------------------------
-    // Verifica se o jogador possui um item específico.
-    // --------------------------------------------------------
-    public bool HasItem(string itemID)
-    {
-        return items.Exists(i => i.itemID == itemID);
-    }
-
-    // --------------------------------------------------------
-    // Retorna todos os itens do tipo GlyphObject — esses são
-    // os que podem ser encaixados nas silhuetas do mural.
-    // --------------------------------------------------------
-    public List<GlyphItem> GetGlyphObjects()
-    {
-        return items.FindAll(i => i.itemType == GlyphItemType.GlyphObject);
-    }
-
-    // Retorna cópia da lista completa (para a UI do inventário)
+    public bool HasItem(string itemID) => items.Exists(i => i.itemID == itemID);
+    public List<GlyphItem> GetGlyphObjects() => items.FindAll(i => i.itemType == GlyphItemType.GlyphObject);
     public List<GlyphItem> GetAllItems() => new List<GlyphItem>(items);
 }

@@ -7,13 +7,15 @@ using UnityEngine;
 
 public class RioDaVidaInteractable : MonoBehaviour, IInteractable
 {
-    [Header("Painel do Puzzle")]
-    public RioDaVidaUI painel;
-
     public string GetInteractionPrompt() => "Pressione E para examinar o mural";
 
     public void Interact()
     {
-        if (painel != null) painel.OpenPanel();
+        // FindObjectsByType com includeInactive=true encontra objetos desativados tambem
+        var ui = Object.FindFirstObjectByType<RioDaVidaUI>(FindObjectsInactive.Include);
+        if (ui != null)
+            ui.OpenPanel();
+        else
+            Debug.LogWarning("[RioDaVidaInteractable] RioDaVidaUI nao encontrado na cena.");
     }
 }

@@ -1,5 +1,5 @@
-// WorldClue.cs
-// Coloque em: Assets/Scripts/Interaction/
+// WorldClue.cs — CORRIGIDO
+// Assets/Scripts/Interaction/WorldClue.cs
 
 using UnityEngine;
 
@@ -23,18 +23,22 @@ public class WorldClue : MonoBehaviour, IInteractable
 
     // Chave de persistência: usa entryID se definido, senão usa itemID, senão o nome do objeto
     private string SaveKey => "clue.collected." +
-        (!string.IsNullOrEmpty(entryID)          ? entryID          :
-         itemToGive != null                       ? itemToGive.itemID :
-                                                   gameObject.name);
+        (!string.IsNullOrEmpty(entryID) ? entryID :
+         itemToGive != null ? itemToGive.itemID :
+                                         gameObject.name);
 
     // --------------------------------------------------------
     private void Start()
     {
-        // Verificação 1: GameStateManager registrou a coleta
+        // Adicione temporariamente no Start() do WorldClue, logo no início:
+        Debug.Log($"[WorldClue] '{gameObject.name}' Start() | " +
+                  $"GSM={GameStateManager.Instance != null} | " +
+                  $"SaveKey='{SaveKey}' | " +
+                  $"Coletado={GameStateManager.Instance?.GetBool(SaveKey)}");
+
         bool jaRegistrado = GameStateManager.Instance != null
                             && GameStateManager.Instance.GetBool(SaveKey);
 
-        // Verificação 2: item já está no inventário (fonte mais confiável)
         bool jaNoInventario = itemToGive != null
                               && InventoryManager.Instance != null
                               && InventoryManager.Instance.HasItem(itemToGive.itemID);
@@ -42,27 +46,28 @@ public class WorldClue : MonoBehaviour, IInteractable
         if (jaRegistrado || jaNoInventario)
         {
             collected = true;
-            gameObject.SetActive(false);
-            Debug.Log($"[WorldClue] '{gameObject.name}' já coletado — ocultado. " +
+            Debug.Log($"[WorldClue] '{gameObject.name}' já coletado — removendo. " +
                       $"(GameState={jaRegistrado}, Inventário={jaNoInventario})");
+
+            // CORREÇÃO: respeita destroyAfterCollect ao restaurar estado
+            if (destroyAfterCollect)
+                Destroy(gameObject);
+            else
+                gameObject.SetActive(false);
         }
     }
 
-    // --------------------------------------------------------
-    // E pressionado pelo jogador
     // --------------------------------------------------------
     public void Interact()
     {
         if (collected) return;
 
-        // Se o painel de exame existir, abre preview antes de coletar
         if (ItemExamineUI.Instance != null)
         {
             ItemExamineUI.Instance.OpenExamine(itemToGive, hintText, this);
             return;
         }
 
-        // Fallback: coleta imediata (sem painel de exame na cena)
         ConfirmCollect();
     }
 
@@ -77,9 +82,6 @@ public class WorldClue : MonoBehaviour, IInteractable
         {
             bool added = InventoryManager.Instance.AddItem(itemToGive);
 
-            // Se não foi adicionado, verifica o motivo:
-            // • Item já está no inventário → prossegue (scroll some normalmente)
-            // • Inventário genuinamente cheio → aborta (scroll fica no chão)
             if (!added && !InventoryManager.Instance.HasItem(itemToGive.itemID))
             {
                 Debug.Log("[WorldClue] Inventário cheio — não foi possível coletar.");
@@ -91,9 +93,9 @@ public class WorldClue : MonoBehaviour, IInteractable
         {
             NotebookManager.NotebookEntry entry = new NotebookManager.NotebookEntry
             {
-                entryID      = entryID,
-                title        = entryTitle,
-                hintText     = hintText,
+                entryID = entryID,
+                title = entryTitle,
+                hintText = hintText,
                 illustration = hintIllustration
             };
             NotebookManager.Instance.AddEntry(entry);
@@ -101,7 +103,7 @@ public class WorldClue : MonoBehaviour, IInteractable
 
         collected = true;
 
-        // Persiste a coleta — sobrevive entre recargas de cena
+        // Persiste — sobrevive ao LoadScene
         GameStateManager.Instance?.SetBool(SaveKey, true);
 
         if (destroyAfterCollect)

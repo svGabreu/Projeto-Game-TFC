@@ -31,12 +31,23 @@ public class PlayerInteraction : MonoBehaviour
     {
         DetectNearestInteractable();
 
-        // Não processa E enquanto painel de puzzle estiver aberto
-        if (!IsPanelOpen() &&
-            currentInteractable != null &&
-            Keyboard.current.eKey.wasPressedThisFrame)
+        if (Keyboard.current.eKey.wasPressedThisFrame)
         {
-            currentInteractable.Interact();
+            // Log de diagnóstico — remover após resolver o problema
+            bool panelOpen   = IsPanelOpen();
+            bool hasTarget   = currentInteractable != null;
+            Debug.Log($"[PI] E pressionado | painel={panelOpen} | alvo={hasTarget} ({currentInteractable?.GetType().Name ?? "null"})");
+            if (panelOpen)
+            {
+                Debug.Log($"[PI] Painel bloqueando: " +
+                    $"RioDaVida={RioDaVidaUI.Instance?.IsOpen()} " +
+                    $"Social={SocialUI.Instance?.IsOpen()} " +
+                    $"Inventory={InventoryUI.Instance?.IsOpen()} " +
+                    $"Examine={ItemExamineUI.Instance?.IsOpen()}");
+            }
+
+            if (!panelOpen && hasTarget)
+                currentInteractable.Interact();
         }
     }
 

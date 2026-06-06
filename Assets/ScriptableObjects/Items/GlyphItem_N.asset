@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GlyphItem_N
   m_EditorClassIdentifier: 
   itemID: bird_symbol
-  displayName: "S\xEDmbolo do P\xE1ssaro"
-  itemSprite: {fileID: 0}
+  displayName: Simbolo da Onda
+  itemSprite: {fileID: 21300000, guid: deb06f6dc5cfbcf4cb68f3c838c229c7, type: 3}
   itemType: 0
   correctLetter: N

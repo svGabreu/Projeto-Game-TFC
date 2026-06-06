@@ -11,22 +11,37 @@ public class GameStateManager : MonoBehaviour
 {
     public static GameStateManager Instance { get; private set; }
 
-    // Dicionário central — persiste na memória enquanto o jogo roda
     private readonly Dictionary<string, string> data = new Dictionary<string, string>();
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Debug.Log($"[GSM] Awake — Instance={(!ReferenceEquals(Instance, null) ? Instance.GetInstanceID().ToString() : "null")} | Este={GetInstanceID()}");
+
+        if (!ReferenceEquals(Instance, null) && Instance != this)
+        {
+            Debug.Log($"[GSM] Duplicata detectada — destruindo este ({GetInstanceID()})");
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
+        transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
+        Debug.Log($"[GSM] Inicializado e persistido. ID={GetInstanceID()}");
     }
 
-    // ── Escrita ──────────────────────────────────────────────
-    public void SetInt   (string key, int    value) => data[key] = value.ToString();
-    public void SetBool  (string key, bool   value) => data[key] = value ? "1" : "0";
+    private void OnDestroy()
+    {
+        Debug.Log($"[GSM] *** DESTRUÍDO *** ID={GetInstanceID()} | Era o Instance={Instance == this} | StackTrace a seguir:");
+        Debug.Log(System.Environment.StackTrace);
+        if (Instance == this)
+            Instance = null;
+    }
+
+    public void SetInt(string key, int value) => data[key] = value.ToString();
+    public void SetBool(string key, bool value) => data[key] = value ? "1" : "0";
     public void SetString(string key, string value) => data[key] = value ?? "";
 
-    // ── Leitura ──────────────────────────────────────────────
     public int GetInt(string key, int defaultValue = 0)
     {
         if (data.TryGetValue(key, out string v) && int.TryParse(v, out int r)) return r;
@@ -47,8 +62,6 @@ public class GameStateManager : MonoBehaviour
 
     public bool HasKey(string key) => data.ContainsKey(key);
 
-    // ── Utilitários ──────────────────────────────────────────
-    /// <summary>Apaga todas as chaves com o prefixo indicado (reseta um puzzle).</summary>
     public void ClearPrefix(string prefix)
     {
         var toRemove = new List<string>();
@@ -57,6 +70,5 @@ public class GameStateManager : MonoBehaviour
         foreach (var key in toRemove) data.Remove(key);
     }
 
-    /// <summary>Apaga todo o estado (reinício do jogo).</summary>
     public void ClearAll() => data.Clear();
 }

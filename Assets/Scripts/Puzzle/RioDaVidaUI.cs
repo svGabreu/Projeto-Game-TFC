@@ -16,32 +16,30 @@ public class RioDaVidaUI : MonoBehaviour
     [Header("Painel raiz")]
     public GameObject painelRaiz;
 
-    [Header("Referência ao Puzzle")]
+    [Header("Referencia ao Puzzle")]
     public RioDaVidaPuzzle puzzle;
 
-    [Header("Mini-inventário")]
+    [Header("Mini-inventario")]
     public Transform miniInventoryContainer;
-    public GameObject miniSlotPrefab;       // mesmo MiniSlot prefab do MuralUI
+    public GameObject miniSlotPrefab;
 
     [Header("Textos de estado")]
-    public TextMeshProUGUI labelEtapa;      // opcional — exibe "Etapa 1" / "Etapa 2"
+    public TextMeshProUGUI labelEtapa;
 
     [Header("Textos das etapas")]
-    [SerializeField] private string textoEtapa1 = "Etapa 1 — Nomeie cada estação do Nilo";
-    [SerializeField] private string textoEtapa2 = "Etapa 2 — Ordene as estações do calendário do Nilo";
-    [SerializeField] private string textoConcluido = "Puzzle concluído!";
+    [SerializeField] private string textoEtapa1 = "Etapa 1 - Nomeie cada estacao do Nilo";
+    [SerializeField] private string textoEtapa2 = "Etapa 2 - Ordene as estacoes do calendario do Nilo";
+    [SerializeField] private string textoConcluido = "Puzzle concluido!";
 
-    [Header("Botão Fechar")]
-    public Button closePanelButton;         // botão X para fechar o painel
+    [Header("Botao Fechar")]
+    public Button closePanelButton;
 
-    // Singleton leve
     public static RioDaVidaUI Instance { get; private set; }
 
     private bool isOpen = false;
     private GlyphItem itemEmMao = null;
     private GameObject slotSelecionadoGO = null;
 
-    // --------------------------------------------------------
     private void Awake()
     {
         Instance = this;
@@ -60,19 +58,35 @@ public class RioDaVidaUI : MonoBehaviour
             ClosePanel();
     }
 
-    // --------------------------------------------------------
-    // Abrir / Fechar
-    // --------------------------------------------------------
+    private void ResolvePuzzleRef()
+    {
+        if (puzzle != null) return;
+        puzzle = Object.FindFirstObjectByType<RioDaVidaPuzzle>(FindObjectsInactive.Include);
+        if (puzzle != null)
+            Debug.Log("[RioDaVidaUI] puzzle resolvido: " + puzzle.gameObject.name);
+        else
+            Debug.LogWarning("[RioDaVidaUI] RioDaVidaPuzzle nao encontrado.");
+    }
+
     public void OpenPanel()
     {
         isOpen = true;
+
+        // 1. Ativa o painel — isso dispara o Start() do RioDaVidaPuzzle
+        //    se for a primeira vez que o painel e aberto na sessao
         if (painelRaiz != null) painelRaiz.SetActive(true);
+
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
-        Cursor.visible   = true;
+        Cursor.visible = true;
 
+        // 2. So AGORA resolve a referencia e atualiza a UI —
+        //    o puzzle.Start() ja rodou e etapa ja foi restaurada
+        ResolvePuzzleRef();
         AtualizarLabelEtapa();
-        RefreshMiniInventory();
+
+        if (puzzle != null && puzzle.Etapa == 1)
+            RefreshMiniInventory();
     }
 
     public void ClosePanel()
@@ -81,14 +95,11 @@ public class RioDaVidaUI : MonoBehaviour
         if (painelRaiz != null) painelRaiz.SetActive(false);
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible   = false;
+        Cursor.visible = false;
     }
 
     public bool IsOpen() => isOpen;
 
-    // --------------------------------------------------------
-    // Atualiza o mini-inventário mostrando apenas QuestItems (pergaminhos)
-    // --------------------------------------------------------
     public void RefreshMiniInventory()
     {
         if (miniInventoryContainer == null) return;
@@ -96,14 +107,13 @@ public class RioDaVidaUI : MonoBehaviour
         foreach (Transform child in miniInventoryContainer)
             Destroy(child.gameObject);
 
-        itemEmMao      = null;
+        itemEmMao = null;
         slotSelecionadoGO = null;
 
         List<GlyphItem> items = InventoryManager.Instance.GetAllItems();
 
         foreach (GlyphItem item in items)
         {
-            // Só exibe pergaminhos (QuestItem)
             if (item.itemType != GlyphItemType.QuestItem) continue;
             if (miniSlotPrefab == null) break;
 
@@ -124,32 +134,26 @@ public class RioDaVidaUI : MonoBehaviour
         }
     }
 
-    // --------------------------------------------------------
-    // Jogador clica num pergaminho no mini-inventário
-    // --------------------------------------------------------
     private void OnScrollSelecionado(GlyphItem item, GameObject slotGO)
     {
-        // Deseleciona o anterior
         if (slotSelecionadoGO != null)
         {
             Image prev = slotSelecionadoGO.GetComponent<Image>();
             if (prev != null) prev.color = Color.white;
         }
 
-        itemEmMao         = item;
+        itemEmMao = item;
         slotSelecionadoGO = slotGO;
 
         Image img = slotGO.GetComponent<Image>();
         if (img != null) img.color = Color.yellow;
 
-        Debug.Log($"[RioDaVida] Pergaminho selecionado: {item.displayName}");
+        Debug.Log("[RioDaVida] Pergaminho selecionado: " + item.displayName);
     }
 
-    // --------------------------------------------------------
-    // Chamado por RioDaVidaQuadroUI quando slot de pergaminho é clicado (Etapa 1)
-    // --------------------------------------------------------
     public void OnSlotClicked(RioDaVidaQuadroUI quadro)
     {
+        ResolvePuzzleRef();
         if (puzzle == null || puzzle.Etapa != 1) return;
 
         if (itemEmMao == null)
@@ -160,44 +164,33 @@ public class RioDaVidaUI : MonoBehaviour
 
         puzzle.TryAssignScroll(quadro, itemEmMao);
 
-        // Reset seleção
-        itemEmMao         = null;
+        itemEmMao = null;
         slotSelecionadoGO = null;
         RefreshMiniInventory();
         AtualizarLabelEtapa();
     }
 
-    // --------------------------------------------------------
-    // Chamado por RioDaVidaQuadroUI quando o quadro é clicado (Etapa 2)
-    // --------------------------------------------------------
     public void OnQuadroClicked(RioDaVidaQuadroUI quadro)
     {
+        ResolvePuzzleRef();
         if (puzzle == null || puzzle.Etapa != 2) return;
         puzzle.HandleQuadroClick(quadro);
     }
 
-    // --------------------------------------------------------
-    // Chamado pelo RioDaVidaPuzzle ao concluir o puzzle
-    // --------------------------------------------------------
     public void OnPuzzleComplete()
     {
         AtualizarLabelEtapa();
-        // Opcional: fechar painel após alguns segundos
-        // Invoke(nameof(ClosePanel), 2f);
     }
 
-    // --------------------------------------------------------
-    // Helpers
-    // --------------------------------------------------------
     private void AtualizarLabelEtapa()
     {
         if (labelEtapa == null || puzzle == null) return;
 
-        labelEtapa.text = puzzle.Etapa switch
-        {
-            1 => textoEtapa1,
-            2 => textoEtapa2,
-            _ => textoConcluido
-        };
+        if (puzzle.Etapa == 1)
+            labelEtapa.text = textoEtapa1;
+        else if (puzzle.Etapa == 2)
+            labelEtapa.text = textoEtapa2;
+        else
+            labelEtapa.text = textoConcluido;
     }
 }
