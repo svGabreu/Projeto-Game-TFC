@@ -38,7 +38,14 @@ public class SceneTransition : MonoBehaviour, IInteractable
             return;
         }
 
-        SceneTransitionManager.Instance?.GoToScene(targetScene, spawnPointID, returnSpawnID);
+        if (SceneTransitionManager.Instance == null)
+        {
+            Debug.LogError("[SceneTransition] SceneTransitionManager.Instance é null! Adicione o componente SceneTransitionManager à cena.");
+            return;
+        }
+
+        Debug.Log($"[SceneTransition] Chamando GoToScene → {targetScene} | spawn={spawnPointID} | IsTransitioning={SceneTransitionManager.Instance.IsTransitioning}");
+        SceneTransitionManager.Instance.GoToScene(targetScene, spawnPointID, returnSpawnID);
     }
 
     // ── Visualização na Scene View ────────────────────────────────────────────

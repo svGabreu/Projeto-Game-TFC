@@ -66,6 +66,7 @@ public class InventoryUI : MonoBehaviour
         if (RioDaVidaUI.Instance   != null && RioDaVidaUI.Instance.IsOpen())   return true;
         if (SocialUI.Instance      != null && SocialUI.Instance.IsOpen())      return true;
         if (ItemExamineUI.Instance != null && ItemExamineUI.Instance.IsOpen()) return true;
+        if (NotebookUI.Instance != null && NotebookUI.Instance.IsOpen()) return true;
         return false;
     }
 

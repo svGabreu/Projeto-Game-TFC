@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GlyphItem_piece_sacerdotes
   m_EditorClassIdentifier: Assembly-CSharp::GlyphItem
   itemID: piece_sacerdotes
-  displayName: "Peça: Sacerdotes"
-  itemSprite: {fileID: 0}
+  displayName: "Pe\xE7a: Sacerdotes"
+  itemSprite: {fileID: 21300000, guid: fb0d4150936f4b94aa0f1b8957efa241, type: 3}
   itemType: 2
   correctLetter: 

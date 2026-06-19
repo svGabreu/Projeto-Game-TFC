@@ -14,7 +14,8 @@
       "Bash(python3 -c \"import pypdf; print\\('ok'\\)\")",
       "Bash(python3 -c \"import PyPDF2; print\\('ok'\\)\")",
       "Bash(python3 -c \"import reportlab; print\\('ok'\\)\")",
-      "mcp__unity-mcp__Unity_ManageGameObject"
+      "mcp__unity-mcp__Unity_ManageGameObject",
+      "mcp__unity-mcp__Unity_GetConsoleLogs"
     ]
   }
 }

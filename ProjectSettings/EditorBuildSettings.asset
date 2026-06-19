@@ -12,6 +12,15 @@ EditorBuildSettings:
     path: Assets/Scenes/Menu.unity
     guid: 6f1f28d7c70e2a04ebe304335ce6c662
   - enabled: 1
+    path: Assets/Scenes/Sala.unity
+    guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Biblioteca.unity
+    guid: adde93a8fad2f7046925c8d19df82b18
+  - enabled: 1
+    path: Assets/Scenes/Vazio.unity
+    guid: 05f93ec7adcf2a8459f64cc6e59d38ad
+  - enabled: 1
     path: Assets/Scenes/Fase_1/Egito.unity
     guid: 39a93a5040c0c254a857e6321f51f8bd
   - enabled: 1

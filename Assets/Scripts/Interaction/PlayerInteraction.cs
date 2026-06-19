@@ -17,13 +17,37 @@ public class PlayerInteraction : MonoBehaviour
 
     private IInteractable currentInteractable;
 
+    private void OnEnable()
+    {
+        // Re-busca apenas se a referência foi destruída (troca de cena)
+        // Não usa Find quando o prompt está apenas inativo (GameObject.Find ignora inativos)
+        bool valid = false;
+        try { valid = interactionPromptText != null; } catch { interactionPromptText = null; }
+
+        if (!valid)
+        {
+            // FindObjectsByType pode localizar objetos inativos
+            var candidates = Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var tmp in candidates)
+            {
+                if (tmp.gameObject.name == "InteractionPrompt")
+                {
+                    interactionPromptText = tmp;
+                    break;
+                }
+            }
+        }
+    }
+
     // Retorna true se qualquer painel de UI estiver aberto
     private bool IsPanelOpen()
     {
-        if (RioDaVidaUI.Instance   != null && RioDaVidaUI.Instance.IsOpen())   return true;
-        if (SocialUI.Instance      != null && SocialUI.Instance.IsOpen())      return true;
-        if (InventoryUI.Instance   != null && InventoryUI.Instance.IsOpen())   return true;
-        if (ItemExamineUI.Instance != null && ItemExamineUI.Instance.IsOpen()) return true;
+        if (DialogueManager.Instance != null && DialogueManager.Instance.IsOpen()) return true;
+        if (RioDaVidaUI.Instance     != null && RioDaVidaUI.Instance.IsOpen())     return true;
+        if (SocialUI.Instance        != null && SocialUI.Instance.IsOpen())        return true;
+        if (InventoryUI.Instance     != null && InventoryUI.Instance.IsOpen())     return true;
+        if (ItemExamineUI.Instance   != null && ItemExamineUI.Instance.IsOpen())   return true;
+        if (MuralUI.CurrentOpen      != null)                                       return true;
         return false;
     }
 
@@ -49,6 +73,17 @@ public class PlayerInteraction : MonoBehaviour
             if (!panelOpen && hasTarget)
                 currentInteractable.Interact();
         }
+    }
+
+    private void OnDisable()
+    {
+        currentInteractable = null;
+        try
+        {
+            if (interactionPromptText != null)
+                interactionPromptText.gameObject.SetActive(false);
+        }
+        catch { interactionPromptText = null; }
     }
 
     private void DetectNearestInteractable()

@@ -58,6 +58,10 @@ public class SpawnPoint : MonoBehaviour
 
         player.transform.SetPositionAndRotation(transform.position, transform.rotation);
 
+        // Reseta a câmera para trás do player no novo spawn
+        var cam = Camera.main?.GetComponent<CameraControl>();
+        cam?.SnapCameraToPlayer();
+
         // Consome o ID para nenhum outro SpawnPoint tentar de novo
         mgr.ConsumeSpawnID();
 

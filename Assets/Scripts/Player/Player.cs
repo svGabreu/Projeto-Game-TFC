@@ -78,6 +78,14 @@ public class Player : MonoBehaviour
         var kb = Keyboard.current;
         if (kb == null) return;
 
+        // Bloqueia input do jogador durante diálogo
+        if (DialogueManager.Instance != null && DialogueManager.Instance.IsOpen())
+        {
+            movementInput = Vector2.zero;
+            isSprinting   = false;
+            return;
+        }
+
         // Movimento (WASD)
         float x = (kb.dKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed ? 1f : 0f);
         float y = (kb.wKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed ? 1f : 0f);
@@ -145,7 +153,9 @@ public class Player : MonoBehaviour
         Vector3 movement = (camFwd * input.y + camRight * input.x).normalized;
 
         float speed = isSprinting ? sprintSpeed : walkSpeed;
-        rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
+
+        // Velocidade horizontal via velocity — respeita colisões do Physics corretamente
+        rb.linearVelocity = new Vector3(movement.x * speed, rb.linearVelocity.y, movement.z * speed);
 
         if (movement != Vector3.zero)
         {

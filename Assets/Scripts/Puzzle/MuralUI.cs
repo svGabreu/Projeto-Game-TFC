@@ -32,6 +32,8 @@ public class MuralUI : MonoBehaviour
     [Header("Fechar")]
     public string closePrompt = "Pressione ESC para fechar";
 
+    public static MuralUI CurrentOpen { get; private set; }
+
     private bool isOpen = false;
     private GlyphItem itemInHand = null;
     private GameObject selectedMiniSlotGO = null;
@@ -45,6 +47,7 @@ public class MuralUI : MonoBehaviour
     public void OpenMural()
     {
         isOpen = true;
+        CurrentOpen = this;
         if (muralPanel != null) muralPanel.SetActive(true);
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
@@ -58,6 +61,7 @@ public class MuralUI : MonoBehaviour
     public void CloseMural()
     {
         isOpen = false;
+        if (CurrentOpen == this) CurrentOpen = null;
         if (muralPanel != null) muralPanel.SetActive(false);
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.Locked;

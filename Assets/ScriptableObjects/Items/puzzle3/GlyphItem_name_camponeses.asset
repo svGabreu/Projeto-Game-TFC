@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GlyphItem_name_camponeses
   m_EditorClassIdentifier: Assembly-CSharp::GlyphItem
   itemID: name_camponeses
-  displayName: "Nome: Camponeses"
-  itemSprite: {fileID: 0}
+  displayName: 'Nome: Camponeses'
+  itemSprite: {fileID: 21300000, guid: a38d684f4b380df479d985a870ca62b3, type: 3}
   itemType: 2
   correctLetter: 

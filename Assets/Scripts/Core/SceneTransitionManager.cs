@@ -39,10 +39,43 @@ public class SceneTransitionManager : MonoBehaviour
     // ─────────────────────────────────────────────────────────────────────────
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            // Verifica se o Manager existente já é o Manager do jogo principal
+            // (tem GameStateManager) — se sim, é uma recarga do Egito após sair de uma Casa:
+            // mantém o Manager antigo (que guarda inventário, estado, etc.) e destrói o novo.
+            bool existingIsGameManager = Instance.GetComponent<GameStateManager>() != null;
+            if (existingIsGameManager)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            // Manager existente é o intro (sem GameStateManager).
+            // O Manager do Egito deve substituí-lo, completando o fade-in.
+            bool oldWasTransitioning = Instance.IsTransitioning;
+            Destroy(Instance.gameObject);
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            BuildFadeCanvas();
+            if (oldWasTransitioning)
+            {
+                fadeImage.color = new Color(0f, 0f, 0f, 1f);
+                StartCoroutine(CompleteHandoff());
+            }
+            return;
+        }
         Instance = this;
         DontDestroyOnLoad(gameObject);
         BuildFadeCanvas();
+    }
+
+    private IEnumerator CompleteHandoff()
+    {
+        yield return null;
+        yield return null;
+        yield return StartCoroutine(Fade(1f, 0f));
+        IsTransitioning = false;
     }
 
     /// <summary>

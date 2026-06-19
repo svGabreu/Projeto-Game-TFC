@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GlyphItem_piece_escribas
   m_EditorClassIdentifier: Assembly-CSharp::GlyphItem
   itemID: piece_escribas
-  displayName: "Peça: Escribas"
-  itemSprite: {fileID: 0}
+  displayName: "Pe\xE7a: Escribas"
+  itemSprite: {fileID: 21300000, guid: fa515a32bef94e0449f0e15487e25283, type: 3}
   itemType: 2
   correctLetter: 

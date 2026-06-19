@@ -13,6 +13,9 @@ public static class SceneNames
     public const string CASA_HIEROGLIFOS   = "Casa_Hieroglifos";
     public const string DENTRO_DA_PIRAMIDE = "DentroDaPiramide";
     public const string LABORATORIO_LOGICA = "LaboratiorioLogica";
+    public const string SALA               = "Sala";
+    public const string BIBLIOTECA         = "Biblioteca";
+    public const string VAZIO              = "Vazio";
 }
 
 public static class SpawnIDs
@@ -30,4 +33,11 @@ public static class SpawnIDs
     public const string EGITO_PORTA_HIEROGLIFOS = "egito_porta_hieroglifos";
     public const string EGITO_PORTA_PIRAMIDE    = "egito_porta_piramide";
     public const string EGITO_PORTA_LABORATORIO = "egito_porta_laboratorio";
+
+    // ── SpawnPoints Sala ↔ Biblioteca ─────────────────────────────────────────
+    public const string ENTRADA_BIBLIOTECA  = "entrada_biblioteca";
+    public const string SALA_PORTA_BIBLIOTECA = "porta_biblioteca";
+
+    // ── SpawnPoint Vazio → Egito ──────────────────────────────────────────────
+    public const string EGITO_INICIAL = "egito_inicial";
 }

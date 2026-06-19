@@ -67,7 +67,7 @@ public class SocialUI : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        DontDestroyOnLoad(transform.root.gameObject);
+        
 
         // Garante Sort Order alto o suficiente para ficar acima de outros painéis (ex: UIGlobal = 10)
         var canvas = GetComponentInParent<Canvas>();
@@ -348,6 +348,12 @@ public class SocialUI : MonoBehaviour
     {
         UpdateLabel();
         Debug.Log("[SocialUI] Puzzle 3 concluído!");
+    }
+
+    // Permite mostrar mensagens customizadas via UnityEvent no Inspector
+    public void MostrarMensagem(string msg)
+    {
+        if (labelEtapa != null) labelEtapa.text = msg;
     }
 
     // --------------------------------------------------------

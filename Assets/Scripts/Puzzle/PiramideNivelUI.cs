@@ -63,7 +63,9 @@ public class PiramideNivelUI : MonoBehaviour
     // --------------------------------------------------------
     public bool TryPlacePiece(GlyphItem item)
     {
+
         if (isFilled) return false;
+        Debug.Log($"[Nivel {nivelCorreto}] esperado='{expectedPieceItemID}' | recebido='{item.itemID}'");
 
         if (item.itemID == expectedPieceItemID)
         {
