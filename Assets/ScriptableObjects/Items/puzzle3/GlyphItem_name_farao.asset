@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GlyphItem_name_farao
   m_EditorClassIdentifier: Assembly-CSharp::GlyphItem
   itemID: name_farao
-  displayName: "Nome: Fara\xF3"
+  displayName: "Fara\xF3"
   itemSprite: {fileID: 21300000, guid: a38d684f4b380df479d985a870ca62b3, type: 3}
   itemType: 2
   correctLetter: 

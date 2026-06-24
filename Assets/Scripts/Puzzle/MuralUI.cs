@@ -32,16 +32,37 @@ public class MuralUI : MonoBehaviour
     [Header("Fechar")]
     public string closePrompt = "Pressione ESC para fechar";
 
+    [Header("Feedback")]
+    public GameObject completionPanel; // overlay "Mural Concluído!" — começa desativado
+
     public static MuralUI CurrentOpen { get; private set; }
 
     private bool isOpen = false;
     private GlyphItem itemInHand = null;
     private GameObject selectedMiniSlotGO = null;
 
+    private void Start()
+    {
+        if (muralPuzzle != null)
+            muralPuzzle.OnMuralCompleted.AddListener(OnMuralCompleted);
+    }
+
+    private void OnDestroy()
+    {
+        if (muralPuzzle != null)
+            muralPuzzle.OnMuralCompleted.RemoveListener(OnMuralCompleted);
+    }
+
     private void Update()
     {
         if (isOpen && Keyboard.current.escapeKey.wasPressedThisFrame)
             CloseMural();
+    }
+
+    private void OnMuralCompleted()
+    {
+        if (completionPanel != null)
+            completionPanel.SetActive(true);
     }
 
     public void OpenMural()
@@ -53,7 +74,10 @@ public class MuralUI : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // Garante que começa mostrando o mini-inventário, seletor fechado
+        // Mostra painel de conclusão se o mural já estava resolvido
+        if (completionPanel != null)
+            completionPanel.SetActive(muralPuzzle != null && muralPuzzle.IsDone);
+
         ShowMiniInventory();
         RefreshMiniInventory();
     }

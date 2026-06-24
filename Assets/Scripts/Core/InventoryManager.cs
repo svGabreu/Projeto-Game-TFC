@@ -13,6 +13,11 @@ public class InventoryManager : MonoBehaviour
     private List<GlyphItem> items = new List<GlyphItem>();
     public UnityEvent OnInventoryChanged = new UnityEvent();
 
+    public GlyphItem GetItemByID(string itemID)
+    {
+        return items.Find(i => i.itemID == itemID);
+    }
+
     private void Awake()
     {
         if (!ReferenceEquals(Instance, null) && Instance != this)

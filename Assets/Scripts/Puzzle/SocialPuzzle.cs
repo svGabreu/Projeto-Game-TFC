@@ -23,8 +23,8 @@ public class SocialPuzzle : MonoBehaviour
     public PiramideNivelUI[] niveis = new PiramideNivelUI[5];
 
     [Header("Recompensa")]
-    public GlyphItem rewardItem;
-    public GameObject rewardWorldObject;
+    public GameObject rewardWorldObject;    // objeto com WorldClue na cena — começa desativado
+    public DialogueData completionDialogue; // opcional — Anjinho comenta a conclusão
 
     [Header("Eventos")]
     public UnityEvent OnAllNamed;
@@ -77,14 +77,13 @@ public class SocialPuzzle : MonoBehaviour
     }
 
     // ── Etapa 1 — Identificação ───────────────────────────────────────────────
-    public void TryAssignName(SocialPecaUI peca, GlyphItem item)
+    public bool TryAssignName(SocialPecaUI peca, GlyphItem item)
     {
-        if (etapa != 1) return;
+        if (etapa != 1) return false;
 
         bool acerto = peca.TryAssignName(item);
-        if (!acerto) return;
+        if (!acerto) return false;
 
-        // Salva em tempo real
         int idx = System.Array.IndexOf(pecas, peca);
         if (idx >= 0)
         {
@@ -100,6 +99,7 @@ public class SocialPuzzle : MonoBehaviour
             Debug.Log("[Social] Todos os personagens identificados!");
             OnAllNamed?.Invoke();
         }
+        return true;
     }
 
     // ── Coleta de estátuas ────────────────────────────────────────────────────
@@ -120,14 +120,13 @@ public class SocialPuzzle : MonoBehaviour
     }
 
     // ── Etapa 2 — Pirâmide ────────────────────────────────────────────────────
-    public void TryPlacePiece(PiramideNivelUI nivel, GlyphItem item)
+    public bool TryPlacePiece(PiramideNivelUI nivel, GlyphItem item)
     {
-        if (etapa != 2) return;
+        if (etapa != 2) return false;
 
         bool acerto = nivel.TryPlacePiece(item);
-        if (!acerto) return;
+        if (!acerto) return false;
 
-        // Salva em tempo real
         int idx = System.Array.IndexOf(niveis, nivel);
         if (idx >= 0)
         {
@@ -148,17 +147,24 @@ public class SocialPuzzle : MonoBehaviour
             OnPuzzleCompleted?.Invoke();
             DarRecompensa();
         }
+        return true;
     }
 
     private void DarRecompensa()
     {
-        if (rewardItem != null)
-        {
-            InventoryManager.Instance.AddItem(rewardItem);
-            Debug.Log($"[Social] Recompensa: {rewardItem.displayName}");
-        }
+        // Fecha o painel antes de mostrar o amuleto
+        SocialUI.Instance?.ClosePanel();
+
+        // Ativa o objeto do amuleto na cena (WorldClue cuida da coleta e inventário)
         if (rewardWorldObject != null)
+        {
             rewardWorldObject.SetActive(true);
+            Debug.Log("[Social] Amuleto da Ordem ativado na cena.");
+        }
+
+        // Diálogo opcional de conclusão (ex: Anjinho comenta a hierarquia)
+        if (completionDialogue != null && DialogueManager.Instance != null)
+            DialogueManager.Instance.StartDialogue(completionDialogue, null);
 
         SocialUI.Instance?.OnPuzzleComplete();
     }

@@ -14,6 +14,7 @@
 //   3. Puzzle valida; se correto, nível fica dourado.
 //   OU: clica no nível primeiro, depois no item.
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,7 +41,9 @@ public class SocialUI : MonoBehaviour
 
     [Header("Geral")]
     public TextMeshProUGUI labelEtapa;
-    public Button closePanelButton;
+    public Button closePanelButton;   // botão fechar da Etapa 1
+    public Button closePanelButton2;  // botão fechar da Etapa 2 (PainelPiramide)
+    public TextMeshProUGUI feedbackText; // texto de erro/acerto — começa desativado
 
     [Header("Mini Inventário — Etapa 1 (dentro do Etapa1Panel)")]
     public Transform miniInventoryContainer;   // Content do ScrollRect dentro do Etapa1Panel
@@ -58,9 +61,10 @@ public class SocialUI : MonoBehaviour
     private readonly List<GameObject> miniSlots  = new List<GameObject>();
     private GameObject selectedSlotGO = null;   // slot destacado no mini-inventário
 
-    // Cores de destaque do slot selecionado
-    private static readonly Color COLOR_SELECTED   = new Color(1f, 0.85f, 0.1f);  // amarelo
+    private static readonly Color COLOR_SELECTED   = new Color(1f, 0.85f, 0.1f);
     private static readonly Color COLOR_UNSELECTED = Color.white;
+
+    private Coroutine feedbackRoutine;
 
     // --------------------------------------------------------
     private void Awake()
@@ -86,8 +90,9 @@ public class SocialUI : MonoBehaviour
 
     private void Start()
     {
-        if (closePanelButton != null)
-            closePanelButton.onClick.AddListener(ClosePanel);
+        if (closePanelButton  != null) closePanelButton.onClick.AddListener(ClosePanel);
+        if (closePanelButton2 != null) closePanelButton2.onClick.AddListener(ClosePanel);
+        if (feedbackText      != null) feedbackText.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -141,11 +146,34 @@ public class SocialUI : MonoBehaviour
 
         DeselectAllNiveis();
 
+        if (feedbackRoutine != null) { StopCoroutine(feedbackRoutine); feedbackRoutine = null; }
+        if (feedbackText    != null) feedbackText.gameObject.SetActive(false);
+
         if (painelRaiz != null) painelRaiz.SetActive(false);
 
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible   = false;
+    }
+
+    // --------------------------------------------------------
+    // Feedback visual de erro/acerto
+    // --------------------------------------------------------
+    private void ShowError(string msg)
+    {
+        if (feedbackText == null) return;
+        if (feedbackRoutine != null) StopCoroutine(feedbackRoutine);
+        feedbackRoutine = StartCoroutine(FeedbackRoutine(msg));
+    }
+
+    private IEnumerator FeedbackRoutine(string msg)
+    {
+        feedbackText.text  = msg;
+        feedbackText.color = Color.red;
+        feedbackText.gameObject.SetActive(true);
+        yield return new WaitForSecondsRealtime(1.5f);
+        feedbackText.gameObject.SetActive(false);
+        feedbackRoutine = null;
     }
 
     private void UpdateLabel()
@@ -193,19 +221,37 @@ public class SocialUI : MonoBehaviour
             var go = Instantiate(miniSlotPrefab, container);
             miniSlots.Add(go);
 
-            // Ícone (primeiro Image encontrado em filhos)
-            var imgs = go.GetComponentsInChildren<Image>(true);
-            foreach (var img in imgs)
+            // Ícone — procura primeiro Image não-raiz
+            Image iconImg = null;
+            foreach (var img in go.GetComponentsInChildren<Image>(true))
             {
-                // Pula o Image raiz (fundo do botão)
                 if (img.gameObject == go) continue;
-                if (item.itemSprite != null) img.sprite = item.itemSprite;
+                iconImg = img;
                 break;
             }
 
-            // Label
+            // Etapa 2 usa sprite; Etapa 1 usa nome (pergaminhos têm sprite mas devem mostrar texto)
+            bool usarSprite = etapa2Ativa && item.itemSprite != null;
+
+            if (iconImg != null)
+            {
+                if (usarSprite)
+                {
+                    iconImg.sprite = item.itemSprite;
+                    iconImg.color  = Color.white;
+                    iconImg.gameObject.SetActive(true);
+                }
+                else
+                    iconImg.gameObject.SetActive(false);
+            }
+
+            // Label — mostra nome na Etapa 1, esconde na Etapa 2 se há sprite
             var tmp = go.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (tmp != null) tmp.text = item.displayName;
+            if (tmp != null)
+            {
+                tmp.gameObject.SetActive(!usarSprite);
+                if (!usarSprite) tmp.text = item.displayName;
+            }
 
             // Botão — procura no root e em filhos
             var btn = go.GetComponent<Button>() ?? go.GetComponentInChildren<Button>(true);
@@ -258,8 +304,8 @@ public class SocialUI : MonoBehaviour
 
         if (selectedItem != null)
         {
-            // Item já selecionado → atribui imediatamente
-            puzzle.TryAssignName(peca, selectedItem);
+            bool ok = puzzle.TryAssignName(peca, selectedItem);
+            if (!ok) ShowError("Nome incorreto!");
             selectedItem = null;
             pendingPeca  = null;
             ClearSlotHighlight();
@@ -267,7 +313,6 @@ public class SocialUI : MonoBehaviour
         }
         else
         {
-            // Aguarda o jogador escolher o nome no mini-inventário
             pendingPeca = peca;
         }
     }
@@ -279,7 +324,8 @@ public class SocialUI : MonoBehaviour
 
         if (selectedItem != null)
         {
-            puzzle.TryPlacePiece(nivel, selectedItem);
+            bool ok = puzzle.TryPlacePiece(nivel, selectedItem);
+            if (!ok) ShowError("Posição errada!");
             selectedItem  = null;
             pendingNivel  = null;
             ClearSlotHighlight();
@@ -288,7 +334,6 @@ public class SocialUI : MonoBehaviour
         }
         else
         {
-            // Aguarda o jogador escolher a peça no mini-inventário
             DeselectAllNiveis();
             pendingNivel = nivel;
             nivel.SetSelectionHighlight(true);
@@ -298,7 +343,6 @@ public class SocialUI : MonoBehaviour
     /// <summary>Jogador clicou num item do mini inventário.</summary>
     public void OnInventoryItemClicked(GlyphItem item, GameObject slotGO = null)
     {
-        // Destaca o slot clicado
         ClearSlotHighlight();
         selectedItem   = item;
         selectedSlotGO = slotGO;
@@ -308,7 +352,8 @@ public class SocialUI : MonoBehaviour
 
         if (puzzle.Etapa == 1 && pendingPeca != null)
         {
-            puzzle.TryAssignName(pendingPeca, item);
+            bool ok = puzzle.TryAssignName(pendingPeca, item);
+            if (!ok) ShowError("Nome incorreto!");
             selectedItem   = null;
             pendingPeca    = null;
             ClearSlotHighlight();
@@ -316,14 +361,14 @@ public class SocialUI : MonoBehaviour
         }
         else if (puzzle.Etapa == 2 && pendingNivel != null)
         {
-            puzzle.TryPlacePiece(pendingNivel, item);
+            bool ok = puzzle.TryPlacePiece(pendingNivel, item);
+            if (!ok) ShowError("Posição errada!");
             selectedItem  = null;
             pendingNivel  = null;
             ClearSlotHighlight();
             DeselectAllNiveis();
             RefreshMiniInventory();
         }
-        // Se não houver pendente, item fica selecionado (amarelo) aguardando clique na peça/nível
     }
 
     // --------------------------------------------------------

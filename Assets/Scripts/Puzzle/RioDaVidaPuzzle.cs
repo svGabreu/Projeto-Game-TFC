@@ -16,8 +16,8 @@ public class RioDaVidaPuzzle : MonoBehaviour
     public RioDaVidaQuadroUI[] quadros = new RioDaVidaQuadroUI[3];
 
     [Header("Recompensa")]
-    public GlyphItem rewardItem;
-    public GameObject rewardWorldObject;
+    public GameObject rewardWorldObject;    // WorldClue com Amuleto da Vida — começa desativado
+    public DialogueData completionDialogue; // opcional
 
     [Header("Eventos")]
     public UnityEvent OnEtapa1Complete;
@@ -214,11 +214,16 @@ public class RioDaVidaPuzzle : MonoBehaviour
 
     private void DarRecompensa()
     {
-        if (rewardItem != null)
-            InventoryManager.Instance.AddItem(rewardItem);
+        RioDaVidaUI.Instance?.ClosePanel();
 
         if (rewardWorldObject != null)
+        {
             rewardWorldObject.SetActive(true);
+            Debug.Log("[RioDaVida] Amuleto da Vida ativado na cena.");
+        }
+
+        if (completionDialogue != null && DialogueManager.Instance != null)
+            DialogueManager.Instance.StartDialogue(completionDialogue, null);
 
         RioDaVidaUI.Instance?.OnPuzzleComplete();
     }

@@ -19,6 +19,7 @@ public class MuralPuzzle : MonoBehaviour
 
     private HashSet<string> completedPairs = new HashSet<string>();
     private bool muralDone = false;
+    public bool IsDone => muralDone;
 
     // Prefixo de chave: "mural.{muralID}."
     private string KEY => "mural." + muralID + ".";
