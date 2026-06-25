@@ -62,12 +62,20 @@ public class WorldClue : MonoBehaviour, IInteractable
     {
         if (collected) return;
 
-        if (ItemExamineUI.Instance != null)
+        var examineUI = ItemExamineUI.Instance;
+
+        // Fallback: singleton pode ser null/destruído entre cenas
+        // FindObjectsInactive.Include: necessário porque PainelExame começa desativado
+        if (examineUI == null)
+            examineUI = Object.FindFirstObjectByType<ItemExamineUI>(FindObjectsInactive.Include);
+
+        if (examineUI != null)
         {
-            ItemExamineUI.Instance.OpenExamine(itemToGive, hintText, this);
+            examineUI.OpenExamine(itemToGive, hintText, this);
             return;
         }
 
+        Debug.LogWarning("[WorldClue] ItemExamineUI não encontrado — coletando diretamente.");
         ConfirmCollect();
     }
 

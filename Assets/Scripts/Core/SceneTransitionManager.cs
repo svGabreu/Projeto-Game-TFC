@@ -58,6 +58,7 @@ public class SceneTransitionManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             BuildFadeCanvas();
+            PersistUIGlobal();
             if (oldWasTransitioning)
             {
                 fadeImage.color = new Color(0f, 0f, 0f, 1f);
@@ -68,6 +69,7 @@ public class SceneTransitionManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         BuildFadeCanvas();
+        PersistUIGlobal();
     }
 
     private IEnumerator CompleteHandoff()
@@ -76,6 +78,32 @@ public class SceneTransitionManager : MonoBehaviour
         yield return null;
         yield return StartCoroutine(Fade(1f, 0f));
         IsTransitioning = false;
+    }
+
+    // Persiste o UIGlobal entre cenas. Os painéis filhos (PainelExame, PainelInventario, etc.)
+    // iniciam inativos — seus Awake() não disparam, então não podem chamar DontDestroyOnLoad.
+    // Este método cobre esse caso ao ser chamado pelo SceneTransitionManager ativo.
+    private void PersistUIGlobal()
+    {
+        // GameObject.Find() ignora objetos inativos — usa GetRootGameObjects() no lugar
+        var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+        foreach (var root in roots)
+        {
+            if (root.name != "UIGlobal") continue;
+
+            // UIGlobal precisa estar ativo para que seus filhos possam funcionar
+            if (!root.activeSelf)
+            {
+                root.SetActive(true);
+                Debug.Log("[STM] UIGlobal estava inativo — ativado automaticamente.");
+            }
+
+            DontDestroyOnLoad(root);
+            Debug.Log("[STM] UIGlobal persistido via DontDestroyOnLoad.");
+            return;
+        }
+
+        Debug.LogWarning("[STM] UIGlobal não encontrado na cena — verifique a hierarquia do Egito.");
     }
 
     /// <summary>

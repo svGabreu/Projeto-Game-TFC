@@ -31,15 +31,24 @@ public class ItemExamineUI : MonoBehaviour
     // --------------------------------------------------------
     private void Awake()
     {
-        // Singleton persistente entre cenas
+        Debug.Log($"[ItemExamineUI] Awake() | root={transform.root.name} | Instance existente={(Instance != null ? Instance.gameObject.name : "null")}");
+
         if (Instance != null && Instance != this)
         {
+            Debug.LogWarning($"[ItemExamineUI] Duplicata detectada — destruindo {gameObject.name} (root={transform.root.name})");
             Destroy(gameObject);
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(transform.root.gameObject); // persiste o Canvas raiz inteiro
+        DontDestroyOnLoad(transform.root.gameObject);
+        Debug.Log($"[ItemExamineUI] Instance definido | DontDestroyOnLoad({transform.root.name})");
         if (painelRaiz != null) painelRaiz.SetActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        Debug.LogWarning($"[ItemExamineUI] OnDestroy() | Instance==this: {Instance == this} | root era: {transform.root?.name ?? "null"}");
+        if (Instance == this) Instance = null;
     }
 
     private void Start()

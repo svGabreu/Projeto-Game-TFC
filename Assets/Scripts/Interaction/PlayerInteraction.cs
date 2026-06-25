@@ -1,6 +1,7 @@
 // PlayerInteraction.cs
 // Coloque em: Assets/Scripts/Interaction/
 
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -19,15 +20,22 @@ public class PlayerInteraction : MonoBehaviour
 
     private void OnEnable()
     {
-        // Re-busca apenas se a referência foi destruída (troca de cena)
-        // Não usa Find quando o prompt está apenas inativo (GameObject.Find ignora inativos)
+        StartCoroutine(FindPromptAfterDestroys());
+    }
+
+    // Adia a busca por um frame para que os Destroy() diferidos do SceneTransitionManager
+    // já tenham sido processados — evita achar o InteractionPrompt da Sala que será destruído.
+    private IEnumerator FindPromptAfterDestroys()
+    {
+        yield return null;
+
         bool valid = false;
         try { valid = interactionPromptText != null; } catch { interactionPromptText = null; }
 
         if (!valid)
         {
-            // FindObjectsByType pode localizar objetos inativos
-            var candidates = Object.FindObjectsByType<TMPro.TextMeshProUGUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var candidates = Object.FindObjectsByType<TMPro.TextMeshProUGUI>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var tmp in candidates)
             {
                 if (tmp.gameObject.name == "InteractionPrompt")
@@ -37,6 +45,8 @@ public class PlayerInteraction : MonoBehaviour
                 }
             }
         }
+
+        // InteractionPrompt ausente é normal em cenas de menu/cutscene — sem aviso.
     }
 
     // Retorna true se qualquer painel de UI estiver aberto

@@ -15,7 +15,16 @@
       "Bash(python3 -c \"import PyPDF2; print\\('ok'\\)\")",
       "Bash(python3 -c \"import reportlab; print\\('ok'\\)\")",
       "mcp__unity-mcp__Unity_ManageGameObject",
-      "mcp__unity-mcp__Unity_GetConsoleLogs"
+      "mcp__unity-mcp__Unity_GetConsoleLogs",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\gabri\\\\Downloads\\\\relatorio_unpacked\\\\word\\\\document.xml\" -Raw -Encoding UTF8; $content.Length)",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\gabri\\\\Downloads\\\\relatorio_unpacked\\\\word\\\\document.xml\" -Raw -Encoding UTF8; $idx = $content.IndexOf\\(\"RF07\"\\); $content.Substring\\([Math]::Max\\(0,$idx-200\\), 2000\\))",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\gabri\\\\Downloads\\\\relatorio_unpacked\\\\word\\\\document.xml\" -Raw -Encoding UTF8; $idx = $content.IndexOf\\(\"RF07\"\\); $end = $content.IndexOf\\(\"</w:tr>\", $idx\\); $content.Substring\\($idx, $end - $idx + 8\\))",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\gabri\\\\Downloads\\\\relatorio_unpacked\\\\word\\\\document.xml\" -Raw -Encoding UTF8; $idx = $content.IndexOf\\(\"RF07\"\\); $start = $content.LastIndexOf\\(\"<w:tr \", $idx\\); $end = $content.IndexOf\\(\"</w:tr>\", $idx\\) + 8; $row = $content.Substring\\($start, $end - $start\\); Write-Output \"START_IDX=$start\"; Write-Output \"END_IDX=$end\"; Write-Output \"ROW_LEN=$\\($row.Length\\)\")",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\gabri\\\\Downloads\\\\relatorio_unpacked\\\\word\\\\document.xml\" -Raw -Encoding UTF8; $idx = $content.IndexOf\\(\"RF07\"\\); $start = $content.LastIndexOf\\(\"<w:tr>\", $idx\\); $end = $content.IndexOf\\(\"</w:tr>\", $idx\\) + 8; Write-Output \"START=$start END=$end\")",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\gabri\\\\Downloads\\\\relatorio_unpacked\\\\word\\\\document.xml\" -Raw -Encoding UTF8; $content.Substring\\(404925, 408095-404925+8\\) | Out-File \"C:\\\\Users\\\\gabri\\\\Downloads\\\\rf07_row.txt\" -Encoding UTF8; Write-Host \"OK: $\\(\\($content.Substring\\(404925, 408095-404925+8\\)\\).Length\\) chars\")",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\gabri\\\\Downloads\\\\relatorio_unpacked\\\\word\\\\document.xml\" -Raw -Encoding UTF8; $idx = $content.IndexOf\\(\"RF07\"\\); $end = $content.IndexOf\\(\"</w:tr>\", $idx\\) + 8; Write-Host \"RF07 row ends at: $end\"; $content.Substring\\($end, 50\\))",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\gabri\\\\Downloads\\\\relatorio_unpacked\\\\word\\\\document.xml\" -Raw -Encoding UTF8; $idx = $content.IndexOf\\(\"RNF03\"\\); $end = $content.IndexOf\\(\"</w:tr>\", $idx\\) + 8; Write-Host \"RNF03 row ends at: $end\"; $content.Substring\\($end, 50\\))",
+      "PowerShell(& \"C:\\\\Users\\\\gabri\\\\Downloads\\\\insert_requirements.ps1\")"
     ]
   }
 }

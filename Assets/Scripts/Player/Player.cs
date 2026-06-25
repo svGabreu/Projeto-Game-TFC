@@ -1,8 +1,13 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement; // Adicionado para gerenciar as cenas (Menu, etc.)
 
 public class Player : MonoBehaviour
 {
+    [SerializeField] private GameObject panelPause;
+    [SerializeField] private GameObject painelControles;  // filho do PausePanel
+    [SerializeField] private ControlsHintUI controlsHint; // HUD de controles no início da cena
+    
     // ── CONFIGURAÇÕES DE MOVIMENTO ────────────────────────────────────────────
     [Header("Movimento")]
     public float walkSpeed    = 5f;
@@ -78,11 +83,15 @@ public class Player : MonoBehaviour
         var kb = Keyboard.current;
         if (kb == null) return;
 
-        // Bloqueia input do jogador durante diálogo
-        if (DialogueManager.Instance != null && DialogueManager.Instance.IsOpen())
+        // Bloqueia input do jogador durante diálogo ou pause
+        bool pausado = panelPause != null && panelPause.activeSelf;
+        if (pausado || (DialogueManager.Instance != null && DialogueManager.Instance.IsOpen()))
         {
             movementInput = Vector2.zero;
             isSprinting   = false;
+            // Ainda processa ESC para fechar o pause
+            if (pausado && kb.escapeKey.wasPressedThisFrame)
+                VoltarParaPartida();
             return;
         }
 
@@ -108,6 +117,52 @@ public class Player : MonoBehaviour
 
         // Countdown do jump buffer
         jumpBufferCounter = Mathf.Max(0f, jumpBufferCounter - Time.deltaTime);
+
+        // Toggle pause com ESC (só se nenhum outro painel estiver aberto)
+        bool outrosPaineisAbertos = (DialogueManager.Instance != null && DialogueManager.Instance.IsOpen())
+                                 || (ItemExamineUI.Instance   != null && ItemExamineUI.Instance.IsOpen());
+        if (kb.escapeKey.wasPressedThisFrame && panelPause != null && !outrosPaineisAbertos)
+        {
+            // Se o painel de controles estiver aberto, ESC fecha só ele
+            if (painelControles != null && painelControles.activeSelf)
+            {
+                FecharControles();
+                return;
+            }
+
+            bool abrindo = !panelPause.activeSelf;
+            panelPause.SetActive(abrindo);
+            Time.timeScale       = abrindo ? 0f : 1f;
+            Cursor.lockState     = abrindo ? CursorLockMode.None   : CursorLockMode.Locked;
+            Cursor.visible       = abrindo;
+
+            if (abrindo && controlsHint != null)
+                controlsHint.OcultarImediato();
+        }
+    }
+
+    public void AbrirControles()
+    {
+        if (painelControles != null) painelControles.SetActive(true);
+    }
+
+    public void FecharControles()
+    {
+        if (painelControles != null) painelControles.SetActive(false);
+    }
+
+    public void VoltarParaPartida()
+    {
+        if (panelPause != null) panelPause.SetActive(false);
+        Time.timeScale   = 1f;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible   = false;
+    }
+
+    public void SairDoJogo()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Menu"); // Corrigido de "ScneneManager" para "SceneManager"
     }
 
     // ── FIXED UPDATE: física ─────────────────────────────────────────────────

@@ -110,11 +110,19 @@ public class RioDaVidaUI : MonoBehaviour
         itemEmMao = null;
         slotSelecionadoGO = null;
 
+        // Monta conjunto dos IDs esperados pelos quadros deste puzzle
+        var scrollsEsperados = new System.Collections.Generic.HashSet<string>();
+        if (puzzle != null)
+            foreach (var quadro in puzzle.quadros)
+                if (quadro != null && !string.IsNullOrEmpty(quadro.expectedScrollID))
+                    scrollsEsperados.Add(quadro.expectedScrollID);
+
         List<GlyphItem> items = InventoryManager.Instance.GetAllItems();
 
         foreach (GlyphItem item in items)
         {
-            if (item.itemType != GlyphItemType.QuestItem) continue;
+            // Só exibe pergaminhos que pertencem a este puzzle
+            if (scrollsEsperados.Count > 0 && !scrollsEsperados.Contains(item.itemID)) continue;
             if (miniSlotPrefab == null) break;
 
             GameObject slotGO = Instantiate(miniSlotPrefab, miniInventoryContainer);
