@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement; // Adicionado para gerenciar as cenas (Menu, etc.)
+using UnityEngine.SceneManagement; 
 
 public class Player : MonoBehaviour
 {
@@ -162,13 +162,13 @@ public class Player : MonoBehaviour
     public void SairDoJogo()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Menu"); // Corrigido de "ScneneManager" para "SceneManager"
+        SceneManager.LoadScene("Menu"); 
     }
 
     // ── FIXED UPDATE: física ─────────────────────────────────────────────────
     private void FixedUpdate()
     {
-        // 1. Ground Check (com delay de decolagem para evitar re-trigger imediato)
+        // 1. Ground Check 
         if (Time.time > lastJumpTime + 0.1f)
             isGrounded = Physics.CheckSphere(transform.position + footOffset, groundCheckRadius, groundLayer);
         else

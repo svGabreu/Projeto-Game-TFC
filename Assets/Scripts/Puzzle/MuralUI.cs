@@ -1,5 +1,4 @@
 // MuralUI.cs
-// Coloque em: Assets/Scripts/Puzzle/
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -33,7 +32,7 @@ public class MuralUI : MonoBehaviour
     public string closePrompt = "Pressione ESC para fechar";
 
     [Header("Feedback")]
-    public GameObject completionPanel; // overlay "Mural Concluído!" — começa desativado
+    public GameObject completionPanel; // overlay "Mural Concluído!" 
 
     public static MuralUI CurrentOpen { get; private set; }
 

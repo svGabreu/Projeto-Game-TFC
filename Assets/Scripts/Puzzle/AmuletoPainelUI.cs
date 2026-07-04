@@ -1,5 +1,4 @@
-// AmuletoPainelUI.cs
-// Coloque em: Assets/Scripts/Puzzle/
+
 // Gerencia o painel de encaixe dos 3 amuletos na porta da pirâmide.
 // Ao preencher os 3 slots, libera a SceneTransition para DentroDaPiramide.
 
@@ -24,9 +23,9 @@ public class AmuletoPainelUI : MonoBehaviour
     public Button btnFechar;
 
     [Header("Recompensa — porta que será desbloqueada")]
-    public SceneTransition portaTransition; // arraste o GameObject da porta
-    public GameObject portaVisual;          // opcional: animação/visual da porta abrindo
-    public AudioSource audioAbertura;       // opcional: som de porta abrindo
+    public SceneTransition portaTransition; 
+    public GameObject portaVisual;          //  animação/visual da porta abrindo
+    public AudioSource audioAbertura;       //  som de porta abrindo
 
     [Header("Trigger da porta — desativar ao abrir")]
     public AmuletoTrigger amuletoTrigger;
