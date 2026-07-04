@@ -46,14 +46,6 @@ public class RioDaVidaQuadroUI : MonoBehaviour
         if (quadroButton != null) quadroButton.onClick.AddListener(OnQuadroClicked);
 
         SetSelectionHighlight(false);
-        if (borderImage    != null) borderImage.color    = Color.clear;
-        if (slotBackground != null) slotBackground.color = defaultColor;
-
-        // Mostra o nome da estação como placeholder; fallback genérico
-        if (slotLabel != null)
-            slotLabel.text = string.IsNullOrEmpty(seasonName)
-                ? "— Arraste um pergaminho —"
-                : $"— {seasonName} —";
 
         // Apaga o texto padrão "Button" do filho do SlotButton (criado automaticamente pelo Unity)
         if (slotButton != null)
@@ -63,8 +55,18 @@ public class RioDaVidaQuadroUI : MonoBehaviour
                 builtinText.text = "";
         }
 
-        // Quadro não é clicável na Etapa 1
-        if (quadroButton != null) quadroButton.interactable = false;
+        // Só reseta visuais e estado se o quadro ainda não foi restaurado pelo RestoreState()
+        // (isNamed é true quando RestoreNamed/TryAssignScroll já rodou antes do Start)
+        if (!isNamed)
+        {
+            if (borderImage    != null) borderImage.color    = Color.clear;
+            if (slotBackground != null) slotBackground.color = defaultColor;
+            if (slotLabel != null)
+                slotLabel.text = string.IsNullOrEmpty(seasonName)
+                    ? "— Arraste um pergaminho —"
+                    : $"— {seasonName} —";
+            if (quadroButton != null) quadroButton.interactable = false;
+        }
     }
 
     // --------------------------------------------------------
@@ -107,8 +109,8 @@ public class RioDaVidaQuadroUI : MonoBehaviour
         }
         else
         {
-            // Feedback visual de erro
             StartCoroutine(FlashWrong());
+            RioDaVidaUI.Instance?.MostrarErro("Pergaminho incorreto para esta estação.");
             return false;
         }
     }

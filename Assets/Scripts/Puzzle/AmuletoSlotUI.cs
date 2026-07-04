@@ -34,9 +34,13 @@ public class AmuletoSlotUI : MonoBehaviour
         if (slotButton != null)
             slotButton.onClick.AddListener(OnClicked);
 
-        if (slotBackground != null) slotBackground.color = defaultColor;
-        if (slotText       != null) slotText.text        = slotLabel;
-        if (itemIcon       != null) itemIcon.gameObject.SetActive(false);
+        // Só reseta visual se o slot não foi restaurado antes do Start() disparar
+        if (!isFilled)
+        {
+            if (slotBackground != null) slotBackground.color = defaultColor;
+            if (slotText       != null) slotText.text        = slotLabel;
+            if (itemIcon       != null) itemIcon.gameObject.SetActive(false);
+        }
     }
 
     // ── Clique no slot ────────────────────────────────────────────────────────

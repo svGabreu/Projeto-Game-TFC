@@ -49,10 +49,14 @@ public class MuralSlotPairUI : MonoBehaviour
         if (letterButton != null)
             letterButton.onClick.AddListener(OnLetterClicked);
 
-        if (filledItemImage != null)
-            filledItemImage.gameObject.SetActive(false);
+        // Só reseta visual se o par não foi restaurado antes do Start() disparar
+        if (!isCompleted && string.IsNullOrEmpty(filledItemID))
+        {
+            if (filledItemImage != null)
+                filledItemImage.gameObject.SetActive(false);
 
-        SetBackground(defaultColor);
+            SetBackground(defaultColor);
+        }
     }
 
     // ── Interação normal ──────────────────────────────────────────────────────
@@ -101,8 +105,37 @@ public class MuralSlotPairUI : MonoBehaviour
             filledItemImage.gameObject.SetActive(true);
         }
 
+        // Salva estado parcial no GSM — recuperável se o jogador sair antes de completar
+        var partialKey = GetPartialSaveKey();
+        if (!string.IsNullOrEmpty(partialKey))
+            GameStateManager.Instance?.SetString(partialKey, item.itemID);
+
         InventoryManager.Instance.RemoveItem(item.itemID);
         TryValidate();
+    }
+
+    // Chave GSM para o preenchimento parcial deste slot
+    private string GetPartialSaveKey()
+    {
+        if (muralUI == null || muralUI.muralPuzzle == null || string.IsNullOrEmpty(pairID))
+            return "";
+        return "mural." + muralUI.muralPuzzle.muralID + ".partial." + pairID;
+    }
+
+    // Chamado por MuralPuzzle.RestoreState() — restaura slot preenchido mas par não concluído
+    public void RestorePartialFill(string itemID)
+    {
+        if (isCompleted || !string.IsNullOrEmpty(filledItemID)) return;
+
+        filledItemID = itemID;
+
+        if (filledItemImage != null)
+        {
+            filledItemImage.gameObject.SetActive(true);
+            filledItemImage.color = Color.gray; // placeholder — item foi consumido do inventário
+        }
+
+        Debug.Log($"[MuralSlotPairUI] Par '{pairID}' restaurado com preenchimento parcial.");
     }
 
     public void SetChosenLetter(string letter)
@@ -138,6 +171,12 @@ public class MuralSlotPairUI : MonoBehaviour
     {
         isCompleted = true;
         SetBackground(correctColor);
+
+        // Limpa o estado parcial do GSM — par está completo agora
+        var partialKey = GetPartialSaveKey();
+        if (!string.IsNullOrEmpty(partialKey))
+            GameStateManager.Instance?.SetString(partialKey, "");
+
         Debug.Log($"Par '{pairID}' correto!");
         OnPairCompleted.Invoke(pairID);
     }

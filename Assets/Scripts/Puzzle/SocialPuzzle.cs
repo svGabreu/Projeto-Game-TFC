@@ -37,6 +37,7 @@ public class SocialPuzzle : MonoBehaviour
     public bool AllCollected => collectedCount >= estatuas.Length;
 
     private const string KEY = "soc.";
+    private const string KEY_REWARD = "soc.reward";
     private GameStateManager GSM => GameStateManager.Instance;
 
     // ── Ciclo de vida ─────────────────────────────────────────────────────────
@@ -71,7 +72,10 @@ public class SocialPuzzle : MonoBehaviour
                 niveis[i].RestoreFilled(GSM.GetString(KEY + "pieceLabel" + i));
 
         if (etapa >= 3)
+        {
             foreach (var n in niveis) n.PlayCompletionEffect();
+            TryRestoreReward();
+        }
 
         Debug.Log($"[Social] Estado restaurado — Etapa {etapa}, {collectedCount} coletadas.");
     }
@@ -89,6 +93,7 @@ public class SocialPuzzle : MonoBehaviour
         {
             GSM?.SetBool(KEY + "named" + idx, true);
             GSM?.SetString(KEY + "nameLabel" + idx, item.displayName);
+            GSM?.SetInt(KEY + "etapa", etapa); // garante que RestoreState() roda ao voltar na cena
         }
 
         bool todasNomeadas = true;
@@ -152,20 +157,32 @@ public class SocialPuzzle : MonoBehaviour
 
     private void DarRecompensa()
     {
-        // Fecha o painel antes de mostrar o amuleto
         SocialUI.Instance?.ClosePanel();
 
-        // Ativa o objeto do amuleto na cena (WorldClue cuida da coleta e inventário)
         if (rewardWorldObject != null)
         {
+            GSM?.SetBool(KEY_REWARD, true);
             rewardWorldObject.SetActive(true);
             Debug.Log("[Social] Amuleto da Ordem ativado na cena.");
         }
 
-        // Diálogo opcional de conclusão (ex: Anjinho comenta a hierarquia)
         if (completionDialogue != null && DialogueManager.Instance != null)
             DialogueManager.Instance.StartDialogue(completionDialogue, null);
 
         SocialUI.Instance?.OnPuzzleComplete();
+    }
+
+    private void TryRestoreReward()
+    {
+        if (rewardWorldObject == null) return;
+        if (GSM == null || !GSM.GetBool(KEY_REWARD)) return;
+
+        var wc = rewardWorldObject.GetComponent<WorldClue>();
+        bool jaColetado = wc != null && wc.itemToGive != null
+                          && InventoryManager.Instance != null
+                          && InventoryManager.Instance.HasItem(wc.itemToGive.itemID);
+
+        if (!jaColetado)
+            rewardWorldObject.SetActive(true);
     }
 }

@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogueData
   lines:
   - characterName: Lucas
-    text: "Ai minha cabe\xE7a... \nOnde \xE9 que eu estou? N\xE3o consigo ver nada..."
+    text: "Ai minha cabe\xE7a... \nOnde \xE9 que eu estou? \nN\xE3o consigo ver nada..."

@@ -22,6 +22,9 @@ public class PiramideNivelUI : MonoBehaviour
     public Image nivelBackground;
     public Image pecaIcon;
 
+    [Header("Item esperado (para restaurar ícone ao reentrar)")]
+    [SerializeField] private GlyphItem expectedPiece;
+
     [Header("Sprites de Estado")]
     public Sprite spriteVazio;      // SlotVazio   — estado normal
     public Sprite spriteCorreto;    // slotCorreto — quando preenchido corretamente
@@ -40,9 +43,13 @@ public class PiramideNivelUI : MonoBehaviour
     // ── Ciclo de vida ─────────────────────────────────────────────────────────
     private void Start()
     {
-        AplicarSpriteVazio();
-        if (nivelText != null) nivelText.text = placeholderText;
-        if (pecaIcon != null) pecaIcon.gameObject.SetActive(false);
+        // Só reseta visual se o nível não foi restaurado antes do Start() disparar
+        if (!isFilled)
+        {
+            AplicarSpriteVazio();
+            if (nivelText != null) nivelText.text = placeholderText;
+            if (pecaIcon != null) pecaIcon.gameObject.SetActive(false);
+        }
     }
 
     private void OnEnable()
@@ -139,8 +146,27 @@ public class PiramideNivelUI : MonoBehaviour
     {
         isFilled = true;
         AplicarSpriteCorreto();
-        if (nivelText != null) nivelText.text = pieceDisplayName;
-        if (nivelButton != null) nivelButton.interactable = false;
+
+        if (nivelButton != null)
+        {
+            nivelButton.interactable = false;
+            var btnImg = nivelButton.GetComponent<Image>();
+            if (btnImg != null) btnImg.enabled = false;
+        }
+
+        // Tenta mostrar o ícone da peça (requer expectedPiece configurado no Inspector)
+        if (expectedPiece != null && expectedPiece.itemSprite != null && pecaIcon != null)
+        {
+            pecaIcon.sprite = expectedPiece.itemSprite;
+            pecaIcon.color = Color.white;
+            pecaIcon.gameObject.SetActive(true);
+            pecaIcon.transform.SetAsLastSibling();
+            if (nivelText != null) nivelText.gameObject.SetActive(false);
+        }
+        else
+        {
+            if (nivelText != null) nivelText.text = pieceDisplayName;
+        }
     }
 
     // ── Efeito de conclusão do puzzle ─────────────────────────────────────────

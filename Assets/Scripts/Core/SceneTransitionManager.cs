@@ -41,10 +41,10 @@ public class SceneTransitionManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            // Verifica se o Manager existente já é o Manager do jogo principal
-            // (tem GameStateManager) — se sim, é uma recarga do Egito após sair de uma Casa:
-            // mantém o Manager antigo (que guarda inventário, estado, etc.) e destrói o novo.
-            bool existingIsGameManager = Instance.GetComponent<GameStateManager>() != null;
+            // Verifica se o Manager existente já é o Manager do jogo principal:
+            // usa GameStateManager.Instance (que pode estar em GO separado do STM,
+            // devido ao SetParent(null) no GSM.Awake) em vez de GetComponent.
+            bool existingIsGameManager = GameStateManager.Instance != null;
             if (existingIsGameManager)
             {
                 Destroy(gameObject);
@@ -53,9 +53,15 @@ public class SceneTransitionManager : MonoBehaviour
 
             // Manager existente é o intro (sem GameStateManager).
             // O Manager do Egito deve substituí-lo, completando o fade-in.
-            bool oldWasTransitioning = Instance.IsTransitioning;
+            bool oldWasTransitioning   = Instance.IsTransitioning;
+            string savedTargetSpawnID  = Instance.TargetSpawnID;   // preserva spawn alvo do Menu
+            string savedPreviousScene  = Instance.PreviousScene;
+            string savedPreviousSpawn  = Instance.PreviousSpawnID;
             Destroy(Instance.gameObject);
             Instance = this;
+            TargetSpawnID   = savedTargetSpawnID;
+            PreviousScene   = savedPreviousScene;
+            PreviousSpawnID = savedPreviousSpawn;
             DontDestroyOnLoad(gameObject);
             BuildFadeCanvas();
             PersistUIGlobal();
@@ -152,12 +158,13 @@ public class SceneTransitionManager : MonoBehaviour
     public void GoToScene(string targetScene, string spawnID = "", string returnSpawnID = "")
     {
         if (IsTransitioning) return;
+        IsTransitioning = true; // Define imediatamente — evita double-trigger no mesmo frame
 
-        // Salva de onde viemos, para o retorno
-        PreviousScene  = SceneManager.GetActiveScene().name;
+        PreviousScene   = SceneManager.GetActiveScene().name;
         PreviousSpawnID = returnSpawnID;
         TargetSpawnID   = spawnID;
 
+        Debug.Log($"[STM] GoToScene → '{targetScene}' | target='{spawnID}' | return='{returnSpawnID}' | PreviousScene='{PreviousScene}'");
         StartCoroutine(TransitionRoutine(targetScene));
     }
 

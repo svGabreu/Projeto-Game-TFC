@@ -7,8 +7,8 @@ public class CutsceneController : MonoBehaviour
     [Header("Timeline")]
     [SerializeField] private PlayableDirector director;
 
-    [Header("Puppet da Cutscene")]
-    [SerializeField] private GameObject cutscenePuppet;
+    [Header("Puppets da Cutscene")]
+    [SerializeField] private GameObject[] cutscenePuppets;
 
     [Header("Prompt pós-cutscene (opcional)")]
     [SerializeField] private string postCutscenePrompt;
@@ -39,7 +39,16 @@ public class CutsceneController : MonoBehaviour
     private void Start()
     {
         if (director != null) director.stopped += OnDirectorStopped;
-        if (autoStart) StartCutscene();
+        if (autoStart)
+        {
+            string key = "cutscene.done." + gameObject.name;
+            bool jaTocou = GameStateManager.Instance != null
+                        && GameStateManager.Instance.GetBool(key);
+            if (jaTocou)
+                StartGameplay();
+            else
+                StartCutscene();
+        }
     }
 
     private void ResolvePlayer(bool force = false)
@@ -138,7 +147,10 @@ public class CutsceneController : MonoBehaviour
     {
         ResolvePlayer();
 
-        SafeSetActive(cutscenePuppet, true, "cutscenePuppet");
+        PromptManager.Instance?.Hide();
+
+        if (cutscenePuppets != null)
+            foreach (var p in cutscenePuppets) SafeSetActive(p, true, "cutscenePuppet");
         HidePlayer();
 
         if (playerRb          != null) playerRb.isKinematic      = true;
@@ -168,7 +180,12 @@ public class CutsceneController : MonoBehaviour
     {
         if (director != null) director.Stop();
 
-        SafeSetActive(cutscenePuppet, false, "cutscenePuppet");
+        string key = "cutscene.done." + gameObject.name;
+        if (GameStateManager.Instance != null)
+            GameStateManager.Instance.SetBool(key, true);
+
+        if (cutscenePuppets != null)
+            foreach (var p in cutscenePuppets) SafeSetActive(p, false, "cutscenePuppet");
         if (playerScript != null)
         {
             try { playerScript.gameObject.SetActive(true); }

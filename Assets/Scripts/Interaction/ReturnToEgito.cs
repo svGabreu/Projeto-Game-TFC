@@ -23,9 +23,11 @@ public class ReturnToEgito : MonoBehaviour, IInteractable
         var mgr = SceneTransitionManager.Instance;
         if (mgr == null) { Debug.LogWarning("[ReturnToEgito] SceneTransitionManager não encontrado!"); return; }
 
+        Debug.Log($"[ReturnToEgito] PreviousScene='{mgr.PreviousScene}' | PreviousSpawnID='{mgr.PreviousSpawnID}'");
+
         if (string.IsNullOrEmpty(mgr.PreviousScene))
         {
-            // Fallback: vai direto ao Egito sem spawn específico
+            Debug.LogWarning("[ReturnToEgito] PreviousScene vazio — fallback sem spawnID.");
             mgr.GoToScene(SceneNames.EGITO);
             return;
         }

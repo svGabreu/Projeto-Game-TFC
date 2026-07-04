@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 public class CreateObj : MonoBehaviour {
 
@@ -38,12 +40,14 @@ public class CreateObj : MonoBehaviour {
 //		}
 //	}
 
+#if UNITY_EDITOR
 	static void CreateNew(GameObject obj, string localPath)
 	{
 		//Create a new prefab at the path given
 		Object prefab = PrefabUtility.CreatePrefab(localPath, obj);
 		PrefabUtility.ReplacePrefab(obj, prefab, ReplacePrefabOptions.ConnectToPrefab);
 	}
+#endif
 	
 
 }

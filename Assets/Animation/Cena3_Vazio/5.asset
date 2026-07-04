@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogueData
   lines:
   - characterName: Leuviah
-    text: "Me chamo Leuviah! Calma que estou aqui para te ajudar.\nO Diabreto pregou
+    text: "Me chamo Leuviah! Calma que estou aqui para te ajudar. O Diabreto pregou
       uma pe\xE7a em voc\xEA, mas d\xE1 pra sair dessa."

@@ -44,7 +44,7 @@ public class SceneTransition : MonoBehaviour, IInteractable
             return;
         }
 
-        Debug.Log($"[SceneTransition] Chamando GoToScene → {targetScene} | spawn={spawnPointID} | IsTransitioning={SceneTransitionManager.Instance.IsTransitioning}");
+        Debug.Log($"[SceneTransition] GoToScene → {targetScene} | spawn={spawnPointID} | return={returnSpawnID} | IsTransitioning={SceneTransitionManager.Instance.IsTransitioning}");
         SceneTransitionManager.Instance.GoToScene(targetScene, spawnPointID, returnSpawnID);
     }
 

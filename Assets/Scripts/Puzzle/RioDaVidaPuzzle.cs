@@ -31,6 +31,7 @@ public class RioDaVidaPuzzle : MonoBehaviour
 
     private const string KEY = "rdv.";
     private const string KEY_ETAPA = "rdv.etapa";
+    private const string KEY_REWARD = "rdv.reward";
 
     private void Start()
     {
@@ -107,12 +108,15 @@ public class RioDaVidaPuzzle : MonoBehaviour
             {
                 EmbaralharQuadros();
             }
+
+            RioDaVidaUI.Instance?.OnEtapa2Restored();
         }
 
         if (etapa >= 3)
         {
             foreach (var q in quadros) q.PlayCompletionEffect();
             RioDaVidaUI.Instance?.OnPuzzleComplete();
+            TryRestoreReward();
         }
 
         Debug.Log("[RioDaVida] Estado restaurado - Etapa " + etapa);
@@ -218,6 +222,7 @@ public class RioDaVidaPuzzle : MonoBehaviour
 
         if (rewardWorldObject != null)
         {
+            GameStateManager.Instance?.SetBool(KEY_REWARD, true);
             rewardWorldObject.SetActive(true);
             Debug.Log("[RioDaVida] Amuleto da Vida ativado na cena.");
         }
@@ -226,5 +231,20 @@ public class RioDaVidaPuzzle : MonoBehaviour
             DialogueManager.Instance.StartDialogue(completionDialogue, null);
 
         RioDaVidaUI.Instance?.OnPuzzleComplete();
+    }
+
+    private void TryRestoreReward()
+    {
+        if (rewardWorldObject == null) return;
+        if (GameStateManager.Instance == null || !GameStateManager.Instance.GetBool(KEY_REWARD)) return;
+
+        // Só reativa se o amuleto ainda não está no inventário do jogador
+        var wc = rewardWorldObject.GetComponent<WorldClue>();
+        bool jaColetado = wc != null && wc.itemToGive != null
+                          && InventoryManager.Instance != null
+                          && InventoryManager.Instance.HasItem(wc.itemToGive.itemID);
+
+        if (!jaColetado)
+            rewardWorldObject.SetActive(true);
     }
 }

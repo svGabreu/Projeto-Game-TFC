@@ -5,6 +5,7 @@
 //   - Exibe mini-inventário dos pergaminhos coletados
 //   - Roteia cliques nos slots (Etapa 1) e nos quadros (Etapa 2) para o RioDaVidaPuzzle
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -31,6 +32,10 @@ public class RioDaVidaUI : MonoBehaviour
     [SerializeField] private string textoEtapa2 = "Etapa 2 - Ordene as estacoes do calendario do Nilo";
     [SerializeField] private string textoConcluido = "Puzzle concluido!";
 
+    [Header("Feedback de Erro")]
+    [SerializeField] private TextMeshProUGUI feedbackErroLabel;
+    [SerializeField] private float feedbackDuracao = 2f;
+
     [Header("Botao Fechar")]
     public Button closePanelButton;
 
@@ -42,8 +47,14 @@ public class RioDaVidaUI : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
         if (painelRaiz != null) painelRaiz.SetActive(false);
+        if (feedbackErroLabel != null) feedbackErroLabel.gameObject.SetActive(false);
     }
 
     private void Start()
@@ -185,7 +196,27 @@ public class RioDaVidaUI : MonoBehaviour
         puzzle.HandleQuadroClick(quadro);
     }
 
+    public void MostrarErro(string mensagem)
+    {
+        if (feedbackErroLabel == null) return;
+        StopCoroutine(nameof(OcultarErroApos));
+        feedbackErroLabel.text = mensagem;
+        feedbackErroLabel.gameObject.SetActive(true);
+        StartCoroutine(nameof(OcultarErroApos));
+    }
+
+    private IEnumerator OcultarErroApos()
+    {
+        yield return new WaitForSecondsRealtime(feedbackDuracao);
+        if (feedbackErroLabel != null) feedbackErroLabel.gameObject.SetActive(false);
+    }
+
     public void OnPuzzleComplete()
+    {
+        AtualizarLabelEtapa();
+    }
+
+    public void OnEtapa2Restored()
     {
         AtualizarLabelEtapa();
     }

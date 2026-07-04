@@ -37,11 +37,13 @@ public class MuralPuzzle : MonoBehaviour
     // ── Restauração ───────────────────────────────────────────────────────────
     private void RestoreState()
     {
-        if (GSM == null || !GSM.HasKey(KEY + "done")) return;
+        if (GSM == null) return;
 
+        // Não exige a chave "done" como portão: pares individuais e preenchimentos
+        // parciais existem mesmo quando o mural ainda não foi concluído.
         muralDone = GSM.GetBool(KEY + "done");
 
-        // Restaura cada par concluído
+        bool anyRestored = false;
         for (int i = 0; i < pairs.Length; i++)
         {
             string pairKey = KEY + "pair." + pairs[i].pairID;
@@ -49,8 +51,24 @@ public class MuralPuzzle : MonoBehaviour
             {
                 completedPairs.Add(pairs[i].pairID);
                 pairs[i].RestoreCompleted();
+                anyRestored = true;
+            }
+            else
+            {
+                string partialKey = KEY + "partial." + pairs[i].pairID;
+                if (GSM.HasKey(partialKey))
+                {
+                    string savedItemID = GSM.GetString(partialKey);
+                    if (!string.IsNullOrEmpty(savedItemID))
+                    {
+                        pairs[i].RestorePartialFill(savedItemID);
+                        anyRestored = true;
+                    }
+                }
             }
         }
+
+        if (!anyRestored && !muralDone) return;
 
         if (muralDone)
         {
@@ -59,7 +77,7 @@ public class MuralPuzzle : MonoBehaviour
         }
         else
         {
-            Debug.Log($"[MuralPuzzle] '{muralID}' restaurado — {completedPairs.Count}/{pairs.Length} pares.");
+            Debug.Log($"[MuralPuzzle] '{muralID}' restaurado — {completedPairs.Count}/{pairs.Length} pares completos.");
         }
     }
 

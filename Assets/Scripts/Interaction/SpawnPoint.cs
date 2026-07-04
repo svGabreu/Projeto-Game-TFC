@@ -38,7 +38,11 @@ public class SpawnPoint : MonoBehaviour
         var mgr = SceneTransitionManager.Instance;
         if (mgr == null) return;
         if (string.IsNullOrEmpty(mgr.TargetSpawnID)) return;
-        if (mgr.TargetSpawnID != spawnID) return;
+        if (mgr.TargetSpawnID != spawnID)
+        {
+            Debug.Log($"[SpawnPoint] '{spawnID}' ignorado (TargetSpawnID='{mgr.TargetSpawnID}') via {origem}");
+            return;
+        }
 
         var player = GameObject.FindGameObjectWithTag("Player");
         if (player == null)

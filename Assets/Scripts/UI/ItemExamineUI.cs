@@ -24,6 +24,11 @@ public class ItemExamineUI : MonoBehaviour
     public Button btnColetar;   // adiciona ao inventário
     public Button btnLargar;    // fecha sem coletar
 
+    [Header("Sons")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip   somAbrir;
+    [SerializeField] private AudioClip   somColetar;
+
     // ---- estado interno ----
     private WorldClue pendingSource;
     private bool isOpen = false;
@@ -85,6 +90,9 @@ public class ItemExamineUI : MonoBehaviour
         Time.timeScale       = 0f;
         Cursor.lockState     = CursorLockMode.None;
         Cursor.visible       = true;
+
+        if (audioSource != null && somAbrir != null)
+            audioSource.PlayOneShot(somAbrir);
     }
 
     // --------------------------------------------------------
@@ -92,6 +100,8 @@ public class ItemExamineUI : MonoBehaviour
     // --------------------------------------------------------
     private void OnColetar()
     {
+        if (audioSource != null && somColetar != null)
+            audioSource.PlayOneShot(somColetar);
         Close();
         pendingSource?.ConfirmCollect();
         pendingSource = null;

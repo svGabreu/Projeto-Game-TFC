@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa293be4c58066044bddd82579c858f4, type: 3}
+  m_Name: Anjinho_MuralHieroglifos_Conclusao
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - characterName: Leuviah
+    text: "Incr\xEDvel! Voc\xEA decifrou os hier\xF3glifos dos dois murais! Os escribas
+      do Egito Antigo ficariam orgulhosos de voc\xEA!"
+  - characterName: Leuviah
+    text: "Os hier\xF3glifos s\xE3o um dos sistemas de escrita mais antigos do mundo,
+      com mais de 3.000 anos de hist\xF3ria. Cada s\xEDmbolo pode representar um
+      som, uma s\xEDlaba ou at\xE9 uma ideia inteira!"
+  - characterName: Leuviah
+    text: "Apenas os escribas \u2014 uma classe de elite no Egito \u2014 dominavam
+      essa arte. Eles registravam tudo: leis, rituais, hist\xF3rias e, principalmente,
+      os registros de com\xE9rcio e navega\xE7\xE3o."
+  - characterName: Leuviah
+    text: "As palavras que voc\xEA combinou nos murais eram usadas para descrever
+      rotas pelo Rio Nilo e pelo Mar Mediterr\xE2neo. Foi por esses caminhos que
+      o Egito se conectou ao mundo antigo e prosperou!"
+  - characterName: Leuviah
+    text: "Como recompensa pelo seu saber, surgiu o Amuleto da Palavra \u2014 s\xEDmbolo
+      do poder do conhecimento escrito dos eg\xEDpcios. Colete-o! Voc\xEA vai precisar
+      dele para revelar o segredo da Pir\xE2mide!"

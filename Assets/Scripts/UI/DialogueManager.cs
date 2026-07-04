@@ -21,6 +21,7 @@ public class DialogueManager : MonoBehaviour
     private PlayableDirector currentDirector;
     private bool           isTyping;
     private Coroutine      typewriterCoroutine;
+    private System.Action  onCompleteCallback;
 
     public bool IsOpen()
     {
@@ -32,7 +33,6 @@ public class DialogueManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        DontDestroyOnLoad(transform.root.gameObject);
     }
 
     private void OnDestroy()
@@ -47,7 +47,7 @@ public class DialogueManager : MonoBehaviour
 
     // ── API pública ───────────────────────────────────────────────────────────
 
-    public void StartDialogue(DialogueData data, PlayableDirector director)
+    public void StartDialogue(DialogueData data, PlayableDirector director, System.Action onComplete = null)
     {
         if (data == null || data.lines.Length == 0) return;
 
@@ -59,9 +59,10 @@ public class DialogueManager : MonoBehaviour
             return;
         }
 
-        currentLines    = data.lines;
-        currentIndex    = 0;
-        currentDirector = director;
+        currentLines       = data.lines;
+        currentIndex       = 0;
+        currentDirector    = director;
+        onCompleteCallback = onComplete;
 
         if (director != null) director.Pause();
 
@@ -143,6 +144,10 @@ public class DialogueManager : MonoBehaviour
 
         currentDirector = null;
         currentLines    = null;
+
+        var cb = onCompleteCallback;
+        onCompleteCallback = null;
+        cb?.Invoke();
     }
 
     private void SetContinueIndicator(bool active)

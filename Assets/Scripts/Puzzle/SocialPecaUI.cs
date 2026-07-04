@@ -48,6 +48,12 @@ public class SocialPecaUI : MonoBehaviour
                 Debug.LogWarning($"[SocialPecaUI] Nenhum Button encontrado em {name} — cliques não funcionarão!");
         }
 
+        // Auto-acha o slotLabel se não foi atribuído no Inspector
+        if (slotLabel == null && slotButton != null)
+            slotLabel = slotButton.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (slotLabel == null)
+            slotLabel = GetComponentInChildren<TextMeshProUGUI>(true);
+
         if (slotButton     != null) slotButton.onClick.AddListener(OnSlotClicked);
         if (slotBackground != null) slotBackground.color = defaultColor;
         if (slotLabel      != null) slotLabel.text       = "— ? —";
@@ -60,7 +66,7 @@ public class SocialPecaUI : MonoBehaviour
         if (slotButton != null && slotButton.targetGraphic != null)
             slotButton.targetGraphic.raycastTarget = true;
 
-        // Apaga texto padrão "Button" do filho interno do SlotButton
+        // Apaga texto padrão "Button" do filho interno do SlotButton (não apaga o slotLabel)
         if (slotButton != null)
         {
             var txt = slotButton.GetComponentInChildren<TMP_Text>();

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa293be4c58066044bddd82579c858f4, type: 3}
+  m_Name: Leuviah_ConclusaoRio
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueData
+  lines:
+  - characterName: Leuviah
+    text: "Parab\xE9ns, Lucas! Voc\xEA identificou e ordenou as esta\xE7\xF5es do
+      Rio da Vida perfeitamente!"
+  - characterName: Leuviah
+    text: "O que voc\xEA viu neste puzzle representa o calend\xE1rio do Egito Antigo,
+      baseado nas cheias do Rio Nilo."
+  - characterName: Leuviah
+    text: "Akhet era a esta\xE7\xE3o da inunda\xE7\xE3o \u2014 o Nilo transbordava,
+      cobrindo as margens com um lodo rico e f\xE9rtil, essencial para a agricultura."
+  - characterName: Leuviah
+    text: "Depois vinha Peret, a esta\xE7\xE3o do plantio. Com as \xE1guas recuadas,
+      os campon\xEAses semeavam as terras \xFAmidas e f\xE9rteis deixadas pela cheia."
+  - characterName: Leuviah
+    text: "E por fim, Shemu \u2014 a colheita! O ciclo do Nilo garantia a sobreviv\xEAncia
+      de toda a civiliza\xE7\xE3o eg\xEDpcia. Sem o rio, n\xE3o haveria Egito!"
+  - characterName: Leuviah
+    text: "Voc\xEA desvendou o Amuleto da Vida, colete-o pois ser\xE1 um item necess\xE1rio! "

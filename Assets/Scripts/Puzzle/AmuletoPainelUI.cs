@@ -61,8 +61,9 @@ public class AmuletoPainelUI : MonoBehaviour
     // ── Persistência ──────────────────────────────────────────────────────────
     private void RestoreState()
     {
-        if (GSM == null || !GSM.HasKey(KEY + "slot0")) return;
+        if (GSM == null) return;
 
+        // Não gatea em slot0 — qualquer slot pode ter sido preenchido primeiro
         for (int i = 0; i < slots.Length; i++)
             if (GSM.GetBool(KEY + "slot" + i))
                 slots[i].RestoreFilled(GSM.GetString(KEY + "slotName" + i));
