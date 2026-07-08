@@ -1,18 +1,13 @@
-// AmuletoTrigger.cs
-// Coloque em: Assets/Scripts/Interaction/
-// Coloque num GameObject com Collider próximo à porta da pirâmide.
-// Ao pressionar E, abre o painel de encaixe dos amuletos.
-
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
-public class AmuletoTrigger : MonoBehaviour, IInteractable
+public class AmuletoTrigger : MonoBehaviour, IInteractable  // Implementa a interface IInteractable para permitir interação com o jogador
 {
     [Header("Prompts")]
     [SerializeField] private string promptBloqueado = "[E] Encaixar os amuletos na porta";
     [SerializeField] private string promptDesbloqueado = "[E] Entrar na Pirâmide";
 
-    public void Interact()
+    public void Interact() 
     {
         if (AmuletoPainelUI.Instance == null)
         {
@@ -23,7 +18,7 @@ public class AmuletoTrigger : MonoBehaviour, IInteractable
         AmuletoPainelUI.Instance.OpenPanel();
     }
 
-    public string GetInteractionPrompt()
+    public string GetInteractionPrompt() // Retorna o prompt de interação apropriado com base no estado dos slots de amuletos
     {
         // Se todos encaixados, mostra prompt de entrar
         if (AmuletoPainelUI.Instance != null)
@@ -38,7 +33,7 @@ public class AmuletoTrigger : MonoBehaviour, IInteractable
         return promptBloqueado;
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmos() // Desenha gizmos no editor para visualizar o collider do trigger
     {
         Gizmos.color = new Color(1f, 0.8f, 0f, 0.3f);
         var col = GetComponent<Collider>();

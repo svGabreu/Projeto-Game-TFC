@@ -1,11 +1,3 @@
-// ReturnToEgito.cs
-// Assets/Scripts/Interaction/ReturnToEgito.cs
-// Coloque na porta de SAÍDA de cada Casa.
-// Ao pressionar E, volta ao Egito no SpawnPoint correto (salvo quando entrou).
-//
-// Não precisa de nenhuma configuração — usa automaticamente os dados
-// salvos pelo SceneTransitionManager.GoToScene() quando entrou na Casa.
-
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]

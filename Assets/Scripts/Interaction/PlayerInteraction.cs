@@ -1,5 +1,3 @@
-// PlayerInteraction.cs
-// Coloque em: Assets/Scripts/Interaction/
 
 using System.Collections;
 using UnityEngine;
@@ -9,7 +7,6 @@ public class PlayerInteraction : MonoBehaviour
 {
     [Header("Configuração")]
     // Raio da esfera de detecção ao redor do player.
-    // Aumente se quiser detectar objetos mais distantes.
     public float interactionRange = 3f;
     public LayerMask interactableLayer;
 
@@ -46,7 +43,6 @@ public class PlayerInteraction : MonoBehaviour
             }
         }
 
-        // InteractionPrompt ausente é normal em cenas de menu/cutscene — sem aviso.
     }
 
     // Retorna true se qualquer painel de UI estiver aberto

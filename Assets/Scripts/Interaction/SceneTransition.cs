@@ -1,14 +1,3 @@
-// SceneTransition.cs
-// Assets/Scripts/Interaction/SceneTransition.cs
-// Coloque num GameObject com Collider na porta/entrada.
-// Implementa IInteractable: o jogador vê "[ E ] Entrar na Casa..." e
-// pressiona E para transitar — exatamente como os outros interagíveis do jogo.
-//
-// Configuração no Inspector:
-//   Target Scene      → nome exato da cena (use SceneNames.CASA_SOCIAL)
-//   Spawn Point ID    → ID do SpawnPoint de chegada (use SpawnIDs.ENTRADA_CASA_SOCIAL)
-//   Return Spawn ID   → ID do SpawnPoint de retorno no Egito (use SpawnIDs.EGITO_PORTA_SOCIAL)
-//   Interaction Label → texto do prompt, ex: "Entrar na Casa Social"
 
 using UnityEngine;
 
@@ -30,7 +19,7 @@ public class SceneTransition : MonoBehaviour, IInteractable
     // ── IInteractable ─────────────────────────────────────────────────────────
     public string GetInteractionPrompt() => $"[E] {interactionLabel}";
 
-    public void Interact()
+    public void Interact() // Chamado quando o jogador pressiona E
     {
         if (string.IsNullOrEmpty(targetScene))
         {

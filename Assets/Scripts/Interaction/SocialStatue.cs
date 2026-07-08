@@ -1,8 +1,3 @@
-// SocialStatue.cs
-// Coloque em: Assets/Scripts/Interaction/
-// Coloque este script em cada estátua 3D da mesa na Casa_Social.
-// A estátua começa bloqueada. Quando o nome correto é identificado
-// no painel, Unlock() é chamado e o jogador pode pressionar E para coletar.
 
 using UnityEngine;
 

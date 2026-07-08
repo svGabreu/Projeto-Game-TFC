@@ -1,12 +1,3 @@
-// SceneTransitionManager.cs
-// Assets/Scripts/Core/SceneTransitionManager.cs
-// Singleton persistente entre cenas.
-// Gerencia transições com fade preto + async loading.
-// O Canvas de fade é criado por código — nenhum prefab necessário.
-//
-// Uso:
-//   SceneTransitionManager.Instance.GoToScene("Casa_social", "entrada_casa_social", "egito_porta_social");
-//   SceneTransitionManager.Instance.ReturnToPreviousScene();
 
 using System.Collections;
 using UnityEngine;
@@ -15,12 +6,12 @@ using UnityEngine.UI;
 
 public class SceneTransitionManager : MonoBehaviour
 {
-    public static SceneTransitionManager Instance { get; private set; }
+    public static SceneTransitionManager Instance { get; private set; } // Singleton 
 
     [Header("Configuração")]
     [Tooltip("Duração do fade in/out em segundos.")]
     public float fadeDuration = 0.4f;
-
+    
     // ── Estado público (lido por SpawnPoint) ──────────────────────────────────
     /// <summary>ID do SpawnPoint a usar na cena que está sendo carregada.</summary>
     public string TargetSpawnID { get; private set; } = "";
@@ -29,7 +20,7 @@ public class SceneTransitionManager : MonoBehaviour
     public string PreviousScene { get; private set; } = "";
 
     /// <summary>ID do SpawnPoint para quando voltar à cena anterior.</summary>
-    public string PreviousSpawnID { get; private set; } = "";
+    public string PreviousSpawnID { get; private set; } = ""; 
 
     public bool IsTransitioning { get; private set; } = false;
 
@@ -42,9 +33,8 @@ public class SceneTransitionManager : MonoBehaviour
         if (Instance != null && Instance != this)
         {
             // Verifica se o Manager existente já é o Manager do jogo principal:
-            // usa GameStateManager.Instance (que pode estar em GO separado do STM,
-            // devido ao SetParent(null) no GSM.Awake) em vez de GetComponent.
-            bool existingIsGameManager = GameStateManager.Instance != null;
+            // usa GameStateManager.Instance 
+            bool existingIsGameManager = GameStateManager.Instance != null; 
             if (existingIsGameManager)
             {
                 Destroy(gameObject);
@@ -78,7 +68,7 @@ public class SceneTransitionManager : MonoBehaviour
         PersistUIGlobal();
     }
 
-    private IEnumerator CompleteHandoff()
+    private IEnumerator CompleteHandoff() // usado quando o SceneTransitionManager do intro é substituído pelo do Egito
     {
         yield return null;
         yield return null;

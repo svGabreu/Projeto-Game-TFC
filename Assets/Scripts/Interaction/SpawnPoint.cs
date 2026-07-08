@@ -1,7 +1,4 @@
-// SpawnPoint.cs
-// Assets/Scripts/Interaction/SpawnPoint.cs
-// Coloque próximo a cada porta/entrada em todas as cenas.
-// Ao carregar a cena, reposiciona o jogador aqui se o spawnID bater.
+
 
 using UnityEngine;
 using UnityEngine.SceneManagement;

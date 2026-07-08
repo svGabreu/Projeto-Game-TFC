@@ -1,11 +1,3 @@
-// SocialPuzzleTrigger.cs
-// Coloque em: Assets/Scripts/Interaction/
-//
-// Dois GameObjects com Collider (trigger) na cena:
-//   SocialMesaTrigger   — perto da mesa    → abre painel de identificação (Etapa 1)
-//   SocialMuralTrigger  — perto da pirâmide → abre painel da pirâmide (Etapa 2)
-//
-// Use o enum TriggerType para configurar no Inspector.
 
 using UnityEngine;
 

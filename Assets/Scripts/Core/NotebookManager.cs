@@ -1,5 +1,4 @@
-// NotebookManager.cs — CORRIGIDO
-// Assets/Scripts/Core/NotebookManager.cs
+// gerencia as entradas do caderno no jogo, permitindo adicionar novas entradas e notificar ouvintes quando o caderno for atualizado.
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +6,7 @@ using UnityEngine.Events;
 
 public class NotebookManager : MonoBehaviour
 {
-    public static NotebookManager Instance { get; private set; }
+    public static NotebookManager Instance { get; private set; } // instancia Singleton do NotebookManager
 
     [System.Serializable]
     public class NotebookEntry
@@ -18,12 +17,12 @@ public class NotebookManager : MonoBehaviour
         public Sprite illustration;
     }
 
-    private List<NotebookEntry> entries = new List<NotebookEntry>();
-    public UnityEvent OnNotebookUpdated = new UnityEvent();
+    private List<NotebookEntry> entries = new List<NotebookEntry>(); // Lista de entradas do caderno
+    public UnityEvent OnNotebookUpdated = new UnityEvent(); // Evento para notificar mudanças no caderno
 
     private void Awake()
     {
-        if (!ReferenceEquals(Instance, null) && Instance != this)
+        if (!ReferenceEquals(Instance, null) && Instance != this) // Verifica se já existe uma instância do NotebookManager
         {
             Destroy(gameObject);
             return;
@@ -35,10 +34,10 @@ public class NotebookManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (Instance == this) Instance = null;
-    }
+        if (Instance == this) Instance = null; 
+    } 
 
-    public void AddEntry(NotebookEntry entry)
+    public void AddEntry(NotebookEntry entry) // Adiciona uma nova entrada ao caderno, se ainda não existir
     {
         if (entries.Exists(e => e.entryID == entry.entryID)) return;
         entries.Add(entry);
@@ -46,6 +45,6 @@ public class NotebookManager : MonoBehaviour
         Debug.Log($"Dica adicionada ao caderno: {entry.title}");
     }
 
-    public List<NotebookEntry> GetAllEntries() => new List<NotebookEntry>(entries);
-    public bool HasEntry(string entryID) => entries.Exists(e => e.entryID == entryID);
-}
+    public List<NotebookEntry> GetAllEntries() => new List<NotebookEntry>(entries); // Retorna uma cópia da lista de entradas do caderno
+    public bool HasEntry(string entryID) => entries.Exists(e => e.entryID == entryID); // Verifica se uma entrada específica existe no caderno
+} 
